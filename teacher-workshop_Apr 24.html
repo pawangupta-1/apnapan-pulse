@@ -1,0 +1,2541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Disposition Workshop</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+body { font-size: 15px; -webkit-font-smoothing: antialiased; }
+input, select, textarea, button { font-size: 16px !important; }
+.page { min-height: calc(100vh - 5rem); }
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.live-dot { animation: pulse-dot 2s infinite; }
+.nav-btn { transition: all 0.15s; border-radius: 0.5rem; }
+.nav-btn.active { background:#6366f1; color:white; }
+.goal-slider { width:100%; }
+/* Card consistency */
+.card { background:white; border-radius:1.5rem; box-shadow:0 4px 24px rgba(0,0,0,0.07); padding:1.25rem; margin-bottom:1.25rem; }
+/* Mobile tap targets */
+button, a, select { min-height: 40px; }
+/* Smooth transitions */
+canvas { transition: opacity 0.25s ease; }
+/* Better text rendering */
+p, li { line-height: 1.6; }
+/* Prevent content overflow */
+.page > div { overflow-x: hidden; }
+/* Accordion chevron smooth */
+svg.transition-transform { transition: transform 0.2s ease; }
+</style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen overflow-x-hidden">
+
+<!-- LOGIN SCREEN -->
+<div id="screen-login" style="display:flex;" class="min-h-screen items-center justify-center px-4">
+  <div class="w-full max-w-md fade-in">
+    <div class="text-center mb-10">
+      <div class="inline-block p-4 bg-indigo-600 rounded-2xl mb-5">
+        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332-.477-4.5-1.253"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Teacher Disposition Workshop</h1>
+      <p class="text-gray-500 text-sm">Your confidential reflection tool</p>
+    </div>
+    <div class="bg-white rounded-3xl shadow-xl p-8">
+      <div id="loginError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm"></div>
+      <div class="mb-5">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Username</label>
+        <input id="loginUser" type="text" placeholder="Enter your username" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none text-base" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+        <input id="loginPass" type="password" placeholder="Enter your password" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none text-base" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button onclick="doLogin()" id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all">
+        Sign In
+      </button>
+      <p class="text-xs text-gray-400 mt-4 text-center">All data is confidential. Only you can see your individual profile.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP (shown after login) -->
+<div id="screen-app" style="display:none;">
+
+  <!-- Nav -->
+  <nav class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-lg shadow z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div>
+        <span class="text-sm font-bold text-gray-900">Teacher Disposition Workshop</span>
+        <span id="navUserLabel" class="ml-2 text-xs text-indigo-600 font-semibold"></span>
+      </div>
+      <div class="hidden md:flex gap-1 flex-wrap justify-end" id="desktopNav">
+        <button onclick="goTo('beliefs')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600" data-screen="beliefs">Welcome</button>
+        <button onclick="goTo('profile')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600" data-screen="profile">My Profile</button>
+        <button onclick="goTo('team')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600" data-screen="team">Team Patterns</button>
+        <button onclick="goTo('scenarios')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600" data-screen="scenarios">Scenarios</button>
+        <button onclick="goTo('reflect')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600" data-screen="reflect">Reflections</button>
+        <button onclick="goTo('wall')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600" data-screen="wall">Community Wall</button>
+        <button onclick="doLogout()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-red-500">Sign out</button>
+      </div>
+      <button onclick="toggleNavMobile()" class="md:hidden p-2 rounded-lg bg-gray-100 text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div id="mobileNavMenu" class="hidden md:hidden mt-2 pb-2 flex flex-col gap-1" style="position:relative;z-index:50;">
+        <button onclick="goTo('beliefs');closeMobileNav()" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-gray-600" data-screen="beliefs">Welcome</button>
+        <button onclick="goTo('profile');closeMobileNav()" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-gray-600" data-screen="profile">My Profile</button>
+        <button onclick="goTo('team');closeMobileNav()" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-gray-600" data-screen="team">Team Patterns</button>
+        <button onclick="goTo('scenarios');closeMobileNav()" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-gray-600" data-screen="scenarios">Scenarios</button>
+        <button onclick="goTo('reflect');closeMobileNav()" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-gray-600" data-screen="reflect">Reflections</button>
+        <button onclick="goTo('wall');closeMobileNav()" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-gray-600" data-screen="wall">Community Wall</button>
+        <button onclick="doLogout()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-red-400">Sign out</button>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- UNDERSTANDING BELIEFS PAGE -->
+  <div id="page-beliefs" class="page hidden pt-20 px-4 pb-12">
+    <div class="max-w-2xl mx-auto fade-in">
+
+      <!-- Welcome hero -->
+      <div id="welcomeHero" class="rounded-3xl overflow-hidden mb-6 mt-4" style="background:linear-gradient(135deg,#4338ca 0%,#7c3aed 60%,#a855f7 100%);">
+        <div class="p-6 pb-5">
+          <p class="text-xs font-bold text-indigo-200 uppercase tracking-widest mb-2" id="welcomeRoleLabel">Professional Development Program</p>
+          <h1 class="text-2xl font-bold text-white mb-2 leading-tight" id="welcomeName"></h1>
+          <p class="text-sm text-indigo-100 leading-relaxed" id="welcomeSubtitle"></p>
+        </div>
+        <div id="welcomeStats" class="grid grid-cols-2 gap-px bg-white/10 border-t border-white/20">
+        </div>
+      </div>
+
+      <!-- Leader guidance panel -->
+      <div id="leaderGuidanceCard" class="hidden bg-white rounded-2xl shadow p-5 mb-5 border border-indigo-100">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-gray-900">Using this data as a school leader</h2>
+            <p class="text-xs text-gray-400">Practical guidance for leading your team — without mapping teachers to their data.</p>
+          </div>
+        </div>
+        <div id="leaderGuidancePanel" class="hidden mb-6"><div class="text-center py-4 text-gray-300 text-sm">Loading team insights...</div></div>
+      </div>
+
+      <!-- How to navigate -->
+      <div id="howToCard" class="bg-white rounded-2xl shadow p-4 mb-6 border border-indigo-50">
+        <p class="text-xs font-bold text-indigo-500 uppercase tracking-wide mb-2">How to use this tool</p>
+        <p class="text-sm text-gray-600 leading-relaxed">Use the tabs above to explore your profile, see how it sits within the team, reflect on what shifted over the year, and contribute to a shared community wall. Start here to understand what the five dimensions mean before diving in.</p>
+      </div>
+
+      <div class="mt-4 mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-1">Understanding Disposition Dimensions</h1>
+        <p class="text-gray-500 text-sm">Read this before exploring your profile. It will help you make sense of what you see.</p>
+      </div>
+
+      <!-- Intro card -->
+      <div class="bg-indigo-600 rounded-2xl p-5 mb-5 text-white">
+        <h2 class="font-bold text-base mb-2">What are disposition dimensions?</h2>
+        <p class="text-sm opacity-90 leading-relaxed mb-3">As teachers, we carry deeply held dispositions about what learning is, what relationships with students should look like, and what our role is in the classroom. Most of the time, we don't examine these dispositions — they just shape what we do.</p>
+        <p class="text-sm opacity-90 leading-relaxed mb-3">This survey maps your dispositions across 5 dimensions. Each dimension is a tension between two orientations — neither is right or wrong. They are rooted in different but legitimate educational traditions and values.</p>
+        <p class="text-sm opacity-85 leading-relaxed italic">The goal is not to judge where you are, but to help you see clearly — and to reflect on whether your dispositions and your practices are aligned.</p>
+      </div>
+
+      <!-- How to read -->
+      <div class="bg-white rounded-2xl shadow p-5 mb-5 border border-indigo-100">
+        <h2 class="font-bold text-gray-900 text-base mb-3">How to read your profile</h2>
+        <p class="text-sm text-gray-600 leading-relaxed mb-4">Each point on the profile is one survey question. The further out it sits, the more strongly you agreed with that statement. Q1–Q5 (amber) are traditional dispositions; Q6–Q10 (teal) are progressive. Opposite points are paired dimensions — they represent the two poles of the same tension.</p>
+        <p class="text-sm text-gray-600 leading-relaxed mb-4">A large amber shape with a small teal shape suggests a more traditional orientation. A large teal shape with a small amber shape suggests a more progressive one. A profile that is large on both sides suggests you hold both dispositions actively — which is often the most complex position.</p>
+
+        <!-- Dummy profile canvas -->
+        <div style="position:relative;width:100%;height:240px;margin-bottom:12px;">
+          <canvas id="dummyDecagon"></canvas>
+        </div>
+        <div class="flex gap-4 flex-wrap text-xs mb-4 justify-center">
+          <span class="flex items-center gap-2"><span style="width:12px;height:3px;background:#b45a1e;border-radius:2px;display:inline-block;"></span>Traditional (Q1–Q5)</span>
+          <span class="flex items-center gap-2"><span style="width:12px;height:3px;background:#0f7370;border-radius:2px;display:inline-block;"></span>Progressive (Q6–Q10)</span>
+        </div>
+
+      </div>
+
+
+      <h2 class="font-bold text-gray-900 text-base mb-3 mt-2 px-1">The 5 Dimensions</h2>
+
+<!-- D1: Distance vs Friendship -->
+      <div class="bg-white rounded-2xl shadow mb-4 overflow-hidden border border-gray-100">
+        <button onclick="toggleDimCard('d1')" class="w-full text-left p-4 flex items-center justify-between gap-3">
+          <div><div class="text-xs font-bold text-indigo-500 uppercase tracking-wide mb-0.5">Dimension 1</div><div class="font-bold text-gray-900">Distance vs Friendship</div><div class="text-xs text-gray-400 mt-0.5">Q1 &amp; Q6</div></div>
+          <svg id="d1-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="d1" class="hidden px-4 pb-5 space-y-4">
+          <div class="h-px bg-gray-100"></div>
+          <div class="rounded-xl overflow-hidden border border-gray-200 text-xs">
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-amber-50 border-b border-amber-100 items-start"><div class="col-span-1 font-bold text-amber-600">Q1</div><div class="col-span-11 text-gray-700 leading-relaxed">It is essential for a teacher to keep social distance from students to maintain discipline.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-teal-50 items-start"><div class="col-span-1 font-bold text-teal-600">Q6</div><div class="col-span-11 text-gray-700 leading-relaxed">A teacher should be like a friend to their students.</div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-amber-50 rounded-xl p-3 border border-amber-100"><div class="text-xs font-bold text-amber-700 mb-1">Distance pole</div><p class="text-xs text-gray-700">Maintaining professional boundaries. Authority is preserved through distance -- being too close can undermine discipline and respect.</p><p class="text-xs text-gray-500 mt-2 italic">Formal address, separate physical space, limited personal sharing, clear role boundaries.</p></div>
+            <div class="bg-teal-50 rounded-xl p-3 border border-teal-100"><div class="text-xs font-bold text-teal-700 mb-1">Friendship pole</div><p class="text-xs text-gray-700">Warmth and closeness are the foundation of learning. Relationships precede instruction -- students learn from people they feel safe with.</p><p class="text-xs text-gray-500 mt-2 italic">Informal interactions, personal sharing, high approachability, students see teacher as an ally.</p></div>
+          </div>
+          <div class="bg-purple-50 rounded-xl p-3 border border-purple-100"><div class="text-xs font-bold text-purple-700 mb-1">Holding both</div><p class="text-xs text-gray-700">Research on authoritative teaching (Baumrind, 1971) shows the most effective teachers are warm <em>and</em> structured. Holding both means being deeply relational while maintaining clarity about your role.</p></div>
+          <div class="bg-gray-50 rounded-xl p-3 border border-gray-100"><div class="text-xs font-bold text-gray-600 mb-1">What it means to shift</div><p class="text-xs text-gray-700">Moving toward friendship requires vulnerability. Moving toward distance can feel like protecting your authority. Shifts here often follow significant relationships -- a student who trusted you, or a moment where distance clearly failed.</p></div>
+          <div class="bg-rose-50 rounded-xl p-3 border border-rose-100"><div class="text-xs font-bold text-rose-700 mb-1">For students</div><p class="text-xs text-gray-700">Adolescents are highly sensitive to whether a teacher likes them. A strongly distant teacher may be perceived as cold. A strongly friendly teacher without structure can create confusion about expectations.</p></div>
+        </div>
+      </div>
+
+<!-- D2: Fixed vs Adaptive -->
+      <div class="bg-white rounded-2xl shadow mb-4 overflow-hidden border border-gray-100">
+        <button onclick="toggleDimCard('d2')" class="w-full text-left p-4 flex items-center justify-between gap-3">
+          <div><div class="text-xs font-bold text-indigo-500 uppercase tracking-wide mb-0.5">Dimension 2</div><div class="font-bold text-gray-900">Fixed vs Adaptive</div><div class="text-xs text-gray-400 mt-0.5">Q2 &amp; Q7</div></div>
+          <svg id="d2-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="d2" class="hidden px-4 pb-5 space-y-4">
+          <div class="h-px bg-gray-100"></div>
+          <div class="rounded-xl overflow-hidden border border-gray-200 text-xs">
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-amber-50 border-b border-amber-100 items-start"><div class="col-span-1 font-bold text-amber-600">Q2</div><div class="col-span-11 text-gray-700 leading-relaxed">Students who are not willing to open up cannot develop a supportive relationship with the teacher.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-teal-50 items-start"><div class="col-span-1 font-bold text-teal-600">Q7</div><div class="col-span-11 text-gray-700 leading-relaxed">Teachers should create opportunities for less open students to open up.</div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-amber-50 rounded-xl p-3 border border-amber-100"><div class="text-xs font-bold text-amber-700 mb-1">Fixed pole</div><p class="text-xs text-gray-700">Openness is the student's responsibility. If a student does not engage, that is on them -- the teacher's role is to teach, not to coax participation.</p><p class="text-xs text-gray-500 mt-2 italic">Uniform expectations, limited differentiation for shy students, leaving it to students to engage.</p></div>
+            <div class="bg-teal-50 rounded-xl p-3 border border-teal-100"><div class="text-xs font-bold text-teal-700 mb-1">Adaptive pole</div><p class="text-xs text-gray-700">The teacher actively reads students and creates conditions for each one to open up. They adjust their approach -- more patient with one, more direct with another.</p><p class="text-xs text-gray-500 mt-2 italic">Differentiated engagement, noticing withdrawn students, creating entry points for quiet learners.</p></div>
+          </div>
+          <div class="bg-purple-50 rounded-xl p-3 border border-purple-100"><div class="text-xs font-bold text-purple-700 mb-1">Holding both</div><p class="text-xs text-gray-700">Vygotsky's Zone of Proximal Development -- meeting students where they are while holding expectations. Holding both means you believe students carry responsibility AND you build the scaffolding that makes engagement possible for each student.</p></div>
+          <div class="bg-gray-50 rounded-xl p-3 border border-gray-100"><div class="text-xs font-bold text-gray-600 mb-1">What it means to shift</div><p class="text-xs text-gray-700">Shifting toward adaptive often happens when a teacher encounters a student who clearly wants to engage but cannot. Shifting back can come from burnout or when efforts are not being reciprocated.</p></div>
+          <div class="bg-rose-50 rounded-xl p-3 border border-rose-100"><div class="text-xs font-bold text-rose-700 mb-1">For students</div><p class="text-xs text-gray-700">Introverted, anxious, or marginalised students suffer most under a fixed approach. They often want to engage but need the teacher to create the bridge. Without it, they disengage silently.</p></div>
+        </div>
+      </div>
+
+<!-- D3: Discipline vs Relationship -->
+      <div class="bg-white rounded-2xl shadow mb-4 overflow-hidden border border-gray-100">
+        <button onclick="toggleDimCard('d3')" class="w-full text-left p-4 flex items-center justify-between gap-3">
+          <div><div class="text-xs font-bold text-indigo-500 uppercase tracking-wide mb-0.5">Dimension 3</div><div class="font-bold text-gray-900">Discipline vs Relationship</div><div class="text-xs text-gray-400 mt-0.5">Q3 &amp; Q8</div></div>
+          <svg id="d3-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="d3" class="hidden px-4 pb-5 space-y-4">
+          <div class="h-px bg-gray-100"></div>
+          <div class="rounded-xl overflow-hidden border border-gray-200 text-xs">
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-amber-50 border-b border-amber-100 items-start"><div class="col-span-1 font-bold text-amber-600">Q3</div><div class="col-span-11 text-gray-700 leading-relaxed">A student must follow discipline and behave properly before a teacher can make them learn.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-teal-50 items-start"><div class="col-span-1 font-bold text-teal-600">Q8</div><div class="col-span-11 text-gray-700 leading-relaxed">By understanding a student's emotional struggles, a teacher creates the necessary safe space to learn.</div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-amber-50 rounded-xl p-3 border border-amber-100"><div class="text-xs font-bold text-amber-700 mb-1">Discipline pole</div><p class="text-xs text-gray-700">Learning requires order. A student must be regulated before they can learn. Behaviour management comes first -- establishing compliance before instruction.</p><p class="text-xs text-gray-500 mt-2 italic">Strict behaviour protocols, consequences before conversations, academic content conditional on conduct.</p></div>
+            <div class="bg-teal-50 rounded-xl p-3 border border-teal-100"><div class="text-xs font-bold text-teal-700 mb-1">Relationship pole</div><p class="text-xs text-gray-700">Behaviour is communication. A student who is acting out is telling you something about their internal state. Understanding that state creates conditions for learning.</p><p class="text-xs text-gray-500 mt-2 italic">Curiosity before consequence, asking what is going on, seeing behaviour as data.</p></div>
+          </div>
+          <div class="bg-purple-50 rounded-xl p-3 border border-purple-100"><div class="text-xs font-bold text-purple-700 mb-1">Holding both</div><p class="text-xs text-gray-700">Trauma-informed pedagogy (Brunzell et al., 2016) and restorative practices argue that safety is the precondition for learning. Holding both means: clear structures AND seeing every behaviour as worth understanding. Structure provides safety; relationship provides the motivation to use it.</p></div>
+          <div class="bg-gray-50 rounded-xl p-3 border border-gray-100"><div class="text-xs font-bold text-gray-600 mb-1">What it means to shift</div><p class="text-xs text-gray-700">Shifting toward relationship often happens after a breakthrough moment -- when curiosity worked where consequences had failed. Shifting toward discipline often follows relational fatigue or when inconsistency has created chaos.</p></div>
+          <div class="bg-rose-50 rounded-xl p-3 border border-rose-100"><div class="text-xs font-bold text-rose-700 mb-1">For students</div><p class="text-xs text-gray-700">Students with trauma histories, attachment difficulties, or neurodivergence are most affected here. For them, behaviour IS the message -- and a purely discipline-first response can deepen mistrust. Classrooms without structure also create anxiety.</p></div>
+        </div>
+      </div>
+
+<!-- D4: Academic vs Holistic -->
+      <div class="bg-white rounded-2xl shadow mb-4 overflow-hidden border border-gray-100">
+        <button onclick="toggleDimCard('d4')" class="w-full text-left p-4 flex items-center justify-between gap-3">
+          <div><div class="text-xs font-bold text-indigo-500 uppercase tracking-wide mb-0.5">Dimension 4</div><div class="font-bold text-gray-900">Academic vs Holistic</div><div class="text-xs text-gray-400 mt-0.5">Q4 &amp; Q9</div></div>
+          <svg id="d4-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="d4" class="hidden px-4 pb-5 space-y-4">
+          <div class="h-px bg-gray-100"></div>
+          <div class="rounded-xl overflow-hidden border border-gray-200 text-xs">
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-amber-50 border-b border-amber-100 items-start"><div class="col-span-1 font-bold text-amber-600">Q4</div><div class="col-span-11 text-gray-700 leading-relaxed">To focus on academics, it is important to leave emotional &amp; social issues outside the classroom.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-teal-50 items-start"><div class="col-span-1 font-bold text-teal-600">Q9</div><div class="col-span-11 text-gray-700 leading-relaxed">Classroom is a social space where emotional and social issues are natural to come up.</div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-amber-50 rounded-xl p-3 border border-amber-100"><div class="text-xs font-bold text-amber-700 mb-1">Academic pole</div><p class="text-xs text-gray-700">The classroom is for learning content. Emotional and social issues belong elsewhere. Bringing them in distracts from the academic purpose.</p><p class="text-xs text-gray-500 mt-2 italic">Deflecting personal disclosures, keeping to the lesson, referring emotional issues to specialists.</p></div>
+            <div class="bg-teal-50 rounded-xl p-3 border border-teal-100"><div class="text-xs font-bold text-teal-700 mb-1">Holistic pole</div><p class="text-xs text-gray-700">Learning is inseparable from the whole child. A student who is grieving or anxious cannot simply set that aside. The classroom must hold human experience as part of academics, not instead of them.</p><p class="text-xs text-gray-500 mt-2 italic">Acknowledging students lives, building SEL into lessons, making space for feelings before content.</p></div>
+          </div>
+          <div class="bg-purple-50 rounded-xl p-3 border border-purple-100"><div class="text-xs font-bold text-purple-700 mb-1">Holding both</div><p class="text-xs text-gray-700">Bronfenbrenner's ecological model and SEL research (Durlak et al., 2011) show social-emotional learning enhances academic outcomes. Holding both means teaching content rigorously AND creating a classroom climate where the whole child is acknowledged.</p></div>
+          <div class="bg-gray-50 rounded-xl p-3 border border-gray-100"><div class="text-xs font-bold text-gray-600 mb-1">What it means to shift</div><p class="text-xs text-gray-700">Shifting toward holistic often follows a student clearly needing to be seen before they could engage academically. Shifting toward academic can come from pressure: curriculum targets, exam performance, time constraints.</p></div>
+          <div class="bg-rose-50 rounded-xl p-3 border border-rose-100"><div class="text-xs font-bold text-rose-700 mb-1">For students</div><p class="text-xs text-gray-700">Students going through difficulty at home often need one teacher to acknowledge what they are carrying. A wholly academic environment can feel dehumanising. However, students also need teachers who hold the space for learning.</p></div>
+        </div>
+      </div>
+
+<!-- D5: Perfect vs Growth -->
+      <div class="bg-white rounded-2xl shadow mb-4 overflow-hidden border border-gray-100">
+        <button onclick="toggleDimCard('d5')" class="w-full text-left p-4 flex items-center justify-between gap-3">
+          <div><div class="text-xs font-bold text-indigo-500 uppercase tracking-wide mb-0.5">Dimension 5</div><div class="font-bold text-gray-900">Perfect vs Growth</div><div class="text-xs text-gray-400 mt-0.5">Q5 &amp; Q10</div></div>
+          <svg id="d5-chevron" class="w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="d5" class="hidden px-4 pb-5 space-y-4">
+          <div class="h-px bg-gray-100"></div>
+          <div class="rounded-xl overflow-hidden border border-gray-200 text-xs">
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-amber-50 border-b border-amber-100 items-start"><div class="col-span-1 font-bold text-amber-600">Q5</div><div class="col-span-11 text-gray-700 leading-relaxed">Teachers should avoid making mistakes in front of students as it undermines their authority.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2.5 bg-teal-50 items-start"><div class="col-span-1 font-bold text-teal-600">Q10</div><div class="col-span-11 text-gray-700 leading-relaxed">Developing a safe space to make errors and seek feedback is important for continuous learning.</div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-amber-50 rounded-xl p-3 border border-amber-100"><div class="text-xs font-bold text-amber-700 mb-1">Perfect pole</div><p class="text-xs text-gray-700">The teacher must model competence and certainty. Mistakes in front of students undermine authority and trust. The teacher should appear to always know the answer.</p><p class="text-xs text-gray-500 mt-2 italic">Avoiding admitting uncertainty, deflecting when wrong, high stakes around being seen to fail.</p></div>
+            <div class="bg-teal-50 rounded-xl p-3 border border-teal-100"><div class="text-xs font-bold text-teal-700 mb-1">Growth pole</div><p class="text-xs text-gray-700">The teacher models learning openly -- including mistakes, confusion, and revision of thinking. Showing how you navigate errors teaches students more than showing a finished product.</p><p class="text-xs text-gray-500 mt-2 italic">Saying I do not know -- let us find out together, celebrating wrong turns, sharing the learning process.</p></div>
+          </div>
+          <div class="bg-purple-50 rounded-xl p-3 border border-purple-100"><div class="text-xs font-bold text-purple-700 mb-1">Holding both</div><p class="text-xs text-gray-700">Dweck's growth mindset research shows the teacher who models fallibility while demonstrating mastery creates the most powerful learning environment. Holding both means you bring deep expertise AND let students see you struggle and learn.</p></div>
+          <div class="bg-gray-50 rounded-xl p-3 border border-gray-100"><div class="text-xs font-bold text-gray-600 mb-1">What it means to shift</div><p class="text-xs text-gray-700">Shifting toward growth requires psychological safety and accepting that authority is not diminished by uncertainty. Shifting toward perfect can come from cultural pressure, accountability systems, or past experiences of humiliation. This dimension is often the most personal.</p></div>
+          <div class="bg-rose-50 rounded-xl p-3 border border-rose-100"><div class="text-xs font-bold text-rose-700 mb-1">For students</div><p class="text-xs text-gray-700">When a teacher never shows mistakes, students learn that competence means never being wrong -- creating perfectionism and fear of failure. Teachers who model growth give students explicit permission to struggle and learn from failure.</p></div>
+        </div>
+      </div>
+
+
+      <button onclick="goTo('profile')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2 mt-2">
+        View My Profile <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- MY PROFILE -->
+  <div id="page-profile" class="page hidden pt-20 px-4 pb-12">
+    <div class="max-w-5xl mx-auto fade-in">
+      <div class="flex items-center justify-between flex-wrap gap-3 mt-4 mb-2">
+        <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+        <div id="facilitatorProfileSelector" class="hidden">
+          <select id="facilitatorTeacherSelect" onchange="onFacilitatorSelectChange()" class="p-2 border-2 border-indigo-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none bg-indigo-50 text-indigo-800 font-semibold">
+          </select>
+        </div>
+      </div>
+      <p id="profileSubtitle" class="text-gray-500 text-sm mb-6">Only you can see this page. Your profile is completely private.</p>
+
+      <div id="profileDataNotice" class="hidden mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-sm"></div>
+
+      <div class="bg-white rounded-3xl shadow-xl p-6 mb-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-1">Your Profile</h2>
+        <p class="text-xs text-gray-400 mb-3 italic">Each vertex is one survey question. Q1–Q5 (amber) are traditional dispositions; Q6–Q10 (teal) are progressive. Opposite vertices are paired dimensions. Each vertex is a raw response — no arithmetic.</p>
+        <button onclick="toggleEl('inlineQRef')" class="flex items-center gap-2 text-xs font-semibold text-indigo-600 mb-4">
+          <svg id="inlineQRefChevron" class="w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          Show survey questions
+        </button>
+        <div id="inlineQRef" class="hidden mb-4 rounded-xl border border-indigo-100 overflow-hidden text-xs">
+          <div class="bg-indigo-600 text-white px-3 py-2 font-bold grid grid-cols-12 gap-2"><div class="col-span-1">#</div><div class="col-span-11">Statement</div></div>
+          <div class="divide-y divide-gray-100">
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-white"><div class="col-span-1 font-bold text-amber-600">Q1</div><div class="col-span-11 text-gray-700">It is essential for a teacher to keep social distance from students to maintain discipline.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-white"><div class="col-span-1 font-bold text-amber-600">Q2</div><div class="col-span-11 text-gray-700">Students who are not willing to open up to their teachers cannot develop a supportive relationship.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-white"><div class="col-span-1 font-bold text-amber-600">Q3</div><div class="col-span-11 text-gray-700">A student must follow discipline and behave properly before a teacher can make them learn.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-white"><div class="col-span-1 font-bold text-amber-600">Q4</div><div class="col-span-11 text-gray-700">To focus on academics, it is important to leave emotional &amp; social issues outside the classroom.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-white"><div class="col-span-1 font-bold text-amber-600">Q5</div><div class="col-span-11 text-gray-700">Teachers should avoid making mistakes in front of students as it undermines their authority.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-indigo-50"><div class="col-span-1 font-bold text-teal-600">Q6</div><div class="col-span-11 text-gray-700">A teacher should be like a friend to their students.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-indigo-50"><div class="col-span-1 font-bold text-teal-600">Q7</div><div class="col-span-11 text-gray-700">Teachers should create opportunities for less open students to open up.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-indigo-50"><div class="col-span-1 font-bold text-teal-600">Q8</div><div class="col-span-11 text-gray-700">By understanding a student's emotional struggles, a teacher can create necessary safe space to learn.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-indigo-50"><div class="col-span-1 font-bold text-teal-600">Q9</div><div class="col-span-11 text-gray-700">Classroom is a social space where emotional and social issues are natural to come up.</div></div>
+            <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-indigo-50"><div class="col-span-1 font-bold text-teal-600">Q10</div><div class="col-span-11 text-gray-700">Developing a safe space to make errors and seek feedback is important for continuous learning.</div></div>
+          </div>
+          <div class="bg-gray-50 px-3 py-1.5 flex gap-4 text-xs border-t border-gray-100">
+            <span class="font-semibold text-amber-600">Q1–Q5: Traditional</span>
+            <span class="font-semibold text-teal-600">Q6–Q10: Progressive</span>
+          </div>
+        </div>
+        <div id="decagonNotice" class="hidden mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div id="novemberDecagonWrap">
+            <h3 class="text-sm font-bold text-gray-700 text-center mb-2">November (Baseline)</h3>
+            <div style="position:relative;width:100%;height:280px;">
+              <canvas id="myDecagonBase"></canvas>
+            </div>
+          </div>
+          <div id="aprilDecagonWrap">
+            <h3 class="text-sm font-bold text-gray-700 text-center mb-2">April (Endline)</h3>
+            <div style="position:relative;width:100%;height:280px;">
+              <canvas id="myDecagonEnd"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-5 mt-4 flex-wrap justify-center">
+          <span class="flex items-center gap-2 text-xs text-gray-500"><span style="display:inline-block;width:14px;height:3px;background:#b45a1e;border-radius:2px;"></span>Traditional (Q1–Q5)</span>
+          <span class="flex items-center gap-2 text-xs text-gray-500"><span style="display:inline-block;width:14px;height:3px;background:#0f7370;border-radius:2px;"></span>Progressive (Q6–Q10)</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-xl p-6 mb-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-1">Dimension Detail</h2>
+        <p class="text-xs text-gray-400 mb-5 italic">Two bars per dimension — one for each paired question. Read both together to understand the tension you hold.</p>
+        <div id="myDualBars"></div>
+      </div>
+
+
+
+      <div class="bg-white rounded-3xl shadow-xl p-5 md:p-6 mb-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-1">Dimension Detail</h2>
+        <p class="text-xs text-gray-400 mb-4 italic">Two bars per dimension — one for each paired question. November and April overlaid so you can see the shift at a glance.</p>
+        <div id="dualBarsPanel"></div>
+      </div>
+
+
+
+      <!-- Secret label key - facilitator only -->
+      <div id="labelKeyWrap" class="hidden">
+        <div class="bg-white rounded-2xl shadow p-4 mb-5 border border-amber-100">
+          <button onclick="document.getElementById('labelKeyBody').classList.toggle('hidden');this.querySelector('span').textContent=document.getElementById('labelKeyBody').classList.contains('hidden')?'Show label key':'Hide label key';" class="w-full flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-amber-700 uppercase tracking-wide">Facilitator only</p>
+              <span class="text-sm font-semibold text-gray-700">Show label key</span>
+            </div>
+            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </button>
+          <div id="labelKeyBody" class="hidden mt-3 pt-3 border-t border-amber-100">
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">A</span><span class="text-gray-600"> — Hunny Taneja</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">B</span><span class="text-gray-600"> — Pooja Arora</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">C</span><span class="text-gray-600"> — Anchal Agarwal</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">D</span><span class="text-gray-600"> — Sheenu Goel</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">E</span><span class="text-gray-600"> — Vikas Juyal</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">F</span><span class="text-gray-600"> — Sakshi Kapoor</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">G</span><span class="text-gray-600"> — Vineet Masih</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">H</span><span class="text-gray-600"> — Bosky Mendhiratta</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">I</span><span class="text-gray-600"> — Dr. Saurabh Bhardwaj</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">J</span><span class="text-gray-600"> — Shivani Chaudhary</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">K</span><span class="text-gray-600"> — Shital Rani</span></div>
+              <div class="bg-amber-50 rounded-lg p-2"><span class="font-bold text-amber-700">L</span><span class="text-gray-600"> — Reeti Singh Mahalwar</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="goTo('team')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2">
+        View Team Patterns <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TEAM PATTERNS -->
+  <div id="page-team" class="page hidden pt-20 px-4 pb-12">
+    <div class="max-w-5xl mx-auto fade-in">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2 mt-4">Team Patterns</h1>
+      <p class="text-gray-500 text-sm mb-6">All profiles are anonymous — only your own dot is labelled <strong>"You"</strong>. Focus on the team's collective spread, not on identifying individuals.</p>
+
+      <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 mb-6 text-sm text-indigo-800">
+        <strong>Why this matters for students:</strong> When teachers on the same team hold very different dispositions about learning and relationships, students experience inconsistency — different expectations, different emotional climates, different standards. Understanding your team's spread helps you work more intentionally as a collective.
+      </div>
+
+      <!-- Cohort quadrant -->
+      <div class="bg-white rounded-3xl shadow-xl p-6 mb-6">
+        <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+          <h2 class="text-lg font-bold text-gray-900">Team Quadrant</h2>
+          <select id="quadrantDimSelect" onchange="renderQuadrant()" class="p-2 border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none">
+            <option value="0">Distance vs Friendship</option>
+            <option value="1">Fixed vs Adaptive</option>
+            <option value="2">Discipline vs Relationship</option>
+            <option value="3">Academic vs Holistic</option>
+            <option value="4">Perfect vs Growth</option>
+          </select>
+        </div>
+
+        <!-- View toggle -->
+        <div class="flex gap-2 flex-wrap mb-4" role="group" aria-label="View options">
+          <button onclick="setQView('apr')" id="qv-apr" class="qv-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-400 bg-indigo-600 text-white transition-all">Team: April</button>
+          <button onclick="setQView('nov')" id="qv-nov" class="qv-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-200 bg-white text-indigo-700 transition-all">Team: November</button>
+          <button onclick="setQView('me')" id="qv-me" class="qv-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-200 bg-white text-indigo-700 transition-all">My journey</button>
+          <button onclick="setQView('all')" id="qv-all" class="qv-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-200 bg-white text-indigo-700 transition-all">All journeys</button>
+        </div>
+
+        <p class="text-xs text-gray-400 mb-3 italic">X-axis = traditional disposition strength · Y-axis = progressive disposition strength · Hover a dot to see the responses</p>
+
+        <div style="position:relative;width:100%;height:360px;">
+          <canvas id="teamQuadrant"></canvas>
+        </div>
+
+        <!-- Dynamic legend -->
+        <div id="quadrantLegend" class="flex gap-4 mt-3 flex-wrap text-xs text-gray-500"></div>
+
+        <!-- Interpretive panel -->
+        <div id="quadrantInterpret" class="mt-5 p-4 bg-indigo-50 border-l-4 border-indigo-400 rounded-r-xl text-sm text-indigo-900 leading-relaxed"></div>
+      </div>
+
+      <!-- Cohort heatmap -->
+      <div class="bg-white rounded-3xl shadow-xl p-6 mb-6">
+        <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+          <h2 class="text-lg font-bold text-gray-900">Team Heatmap</h2>
+          <div class="flex gap-2">
+            <button onclick="setHmView('baseline')" id="hm-baseline" class="hm-tab px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-400 bg-indigo-600 text-white">November</button>
+            <button onclick="setHmView('endline')" id="hm-endline" class="hm-tab px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-200 bg-white text-indigo-700">April</button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mb-4 italic">Your row is highlighted. All others are anonymous. Color shows response — not a ranking.</p>
+        <div id="teamHeatmap" class="overflow-x-auto"></div>
+        <div class="mt-4 flex items-center gap-4 flex-wrap">
+          <div class="flex items-center gap-2"><span style="width:12px;height:12px;border-radius:3px;background:#b45a1e;display:inline-block;"></span><span class="text-xs text-gray-500">Not true</span></div>
+          <div style="width:50px;height:10px;border-radius:4px;background:linear-gradient(to right,#b45a1e,#e6a55a,#f5f0e1,#64beb4,#0f7370);border:1px solid #e5e7eb;"></div>
+          <div class="flex items-center gap-2"><span style="width:12px;height:12px;border-radius:3px;background:#0f7370;display:inline-block;"></span><span class="text-xs text-gray-500">Very true</span></div>
+          <span class="text-xs text-gray-400 italic">Color shows response, not rank</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-xl p-5 mb-5 border border-indigo-50">
+        <h2 class="text-lg font-bold text-gray-900 mb-1">What does the team data tell us?</h2>
+        <p class="text-xs text-gray-400 mb-4 italic">Analysing both November and April data. Strengths, friction points, and what shifted collectively.</p>
+        <div id="hmReflectPanel"><div class="text-center py-6 text-gray-300 text-sm">Loading team insights...</div></div>
+      </div>
+
+      <button onclick="goTo('scenarios')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2">
+        Go to Scenarios <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- REFLECTIONS -->
+  <div id="page-reflect" class="page hidden pt-20 px-4 pb-12">
+    <div class="max-w-3xl mx-auto fade-in">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2 mt-4">Workshop Reflections</h1>
+      <p class="text-gray-500 text-sm mb-6">Your responses will appear anonymously on the community wall. Take your time — there are no right or wrong answers.</p>
+
+      <div id="alreadySubmitted" class="hidden mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-700 text-sm font-semibold text-center">
+        ✓ You have already submitted your reflections. They are visible on the community wall.
+      </div>
+
+      <div class="space-y-5">
+
+        <!-- Q1 -->
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl p-6 text-white">
+          <h3 class="font-bold text-lg mb-2">Reflection 1 — Noticing change</h3>
+          <p class="text-sm opacity-90 mb-4">What shift, if any, do you notice in your profile between November and April? What do you think contributed to it?</p>
+          <textarea id="r1" class="w-full p-3 rounded-xl text-gray-900 text-sm" rows="4" placeholder="Share your thoughts..."></textarea>
+        </div>
+
+        <!-- Q2 — Goal setter -->
+        <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl p-6 text-white">
+          <h3 class="font-bold text-lg mb-2">Reflection 2 — Setting a growth goal</h3>
+          <p class="text-sm opacity-90 mb-4">Pick one dimension where you want to grow. Where are you now, and where do you want to be? What would help you get there?</p>
+          <div class="mb-4">
+            <label class="block text-xs font-semibold mb-1 opacity-80">Choose a dimension</label>
+            <select id="goalDim" onchange="renderGoalSlider()" class="w-full p-2 rounded-xl text-gray-900 text-sm border-0 focus:outline-none">
+              <option value="">-- Select a dimension --</option>
+              <option value="Distance vs Friendship">Distance vs Friendship</option>
+              <option value="Fixed vs Adaptive">Fixed vs Adaptive</option>
+              <option value="Discipline vs Relationship">Discipline vs Relationship</option>
+              <option value="Academic vs Holistic">Academic vs Holistic</option>
+              <option value="Perfect vs Growth">Perfect vs Growth</option>
+            </select>
+          </div>
+          <div id="goalSliderArea" class="hidden mb-4">
+            <p class="text-xs opacity-80 mb-2">Drag the <span class="font-bold">goal marker</span> to where you want to be:</p>
+            <div id="goalSliderViz" class="mb-2"></div>
+            <div class="flex justify-between text-xs opacity-70 mt-1" id="goalPoleLabels"></div>
+          </div>
+          <textarea id="r2" class="w-full p-3 rounded-xl text-gray-900 text-sm mt-2" rows="3" placeholder="Describe your goal and what would help you get there..."></textarea>
+          <textarea id="r2why" class="w-full p-3 rounded-xl text-gray-900 text-sm mt-2" rows="2" placeholder="Why does this dimension matter to you?"></textarea>
+        </div>
+
+        <!-- Q3 -->
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl p-6 text-white">
+          <h3 class="font-bold text-lg mb-2">Reflection 3 — Your role in the team</h3>
+          <p class="text-sm opacity-90 mb-4">Look at where you sit in the team's spread. Honestly &mdash; are you adding to consistency for students, or to the friction? What would it mean to move one step toward complementing your colleagues?</p>
+          <textarea id="r3" class="w-full p-3 rounded-xl text-gray-900 text-sm" rows="4" placeholder="Share your honest reflection..."></textarea>
+        </div>
+
+      </div>
+
+      <div class="mt-6 bg-white rounded-3xl shadow-xl p-6">
+        <h3 class="font-bold text-gray-900 mb-1">Submit to community wall</h3>
+        <p class="text-xs text-gray-400 mb-4">Your name will not appear. Responses are posted anonymously so everyone can reflect together openly.</p>
+        <div id="submitError" class="hidden mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm"></div>
+        <button onclick="submitReflections()" id="submitReflBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          Submit Anonymously to Wall
+        </button>
+        <div id="submitSuccess" class="hidden mt-3 p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm text-center font-semibold"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- SCENARIOS PAGE -->
+  <div id="page-scenarios" class="page hidden pt-20 px-4 pb-12">
+    <div class="max-w-2xl mx-auto fade-in">
+      <div class="mt-4 mb-5">
+        <h1 class="text-2xl font-bold text-gray-900 mb-1">How we make decisions in the moment</h1>
+        <p class="text-xs text-gray-400">Five classroom scenarios. See how the team responded across both surveys &mdash; and reflect on why people landed differently.</p>
+      </div>
+      <div id="scenPanel"></div>
+      <button onclick="goTo('reflect')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2 mt-2">
+        Go to Reflections
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- COMMUNITY WALL -->
+  <div id="page-wall" class="page hidden pt-20 px-4 pb-12">
+    <div class="max-w-5xl mx-auto fade-in">
+      <div class="flex items-center justify-between flex-wrap gap-3 mt-4 mb-2">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Community Wall</h1>
+          <div class="flex items-center gap-2 mt-1">
+            <div class="live-dot w-2 h-2 bg-green-500 rounded-full"></div>
+            <span class="text-xs text-green-600 font-semibold">Live — updates as teachers respond</span>
+          </div>
+        </div>
+        <div id="wallCount" class="bg-indigo-100 text-indigo-700 text-xs font-bold px-4 py-2 rounded-full">Loading...</div>
+      </div>
+      <p class="text-gray-400 text-xs mb-6 italic">All responses are anonymous. Focus on the ideas, not who said them.</p>
+
+      <div class="flex gap-2 flex-wrap mb-6">
+        <button onclick="filterWall('all')" id="wf-all" class="wall-filter px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-400 bg-indigo-600 text-white">All</button>
+        <button onclick="filterWall('r1')" id="wf-r1" class="wall-filter px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-200 bg-white text-indigo-700">Change noticed</button>
+        <button onclick="filterWall('r2')" id="wf-r2" class="wall-filter px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-200 bg-white text-indigo-700">Growth goals</button>
+        <button onclick="filterWall('r3')" id="wf-r3" class="wall-filter px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-indigo-200 bg-white text-indigo-700">Team role</button>
+      </div>
+
+      <div id="wallCards" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="col-span-2 text-center py-12 text-indigo-300 text-sm">Loading responses...</div>
+      </div>
+      <p class="text-center text-xs text-gray-400 mt-6">Responses are anonymous · Visible to all workshop participants</p>
+    </div>
+  </div>
+
+</div><!-- end screen-app -->
+
+<script>
+const SUPA_URL = 'https://whyatngcvuooqytgmukx.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndoeWF0bmdjdnVvb3F5dGdtdWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTUyNjEsImV4cCI6MjA5MjM3MTI2MX0.hfSYQ9kpG4Yt1rX2R00fE2-saqXnqxX2-hTV3TDNNuE';
+
+// ── Data ────────────────────────────────────────────────────────────
+const BASELINE = {
+  A:[2,1,2,1,1,4,4,4,4,4], B:[4,3,4,2,2,2,3,4,3,3],
+  C:[3,2,4,4,4,2,3,3,3,3], D:[3,2,4,2,4,3,4,4,4,4],
+  E:[2,1,3,1,3,1,4,4,4,3], F:[4,4,3,4,4,3,4,4,3,3],
+  G:[3,4,4,3,4,4,4,4,4,4], H:[3,4,1,1,1,3,4,4,4,4],
+  I:[3,3,4,2,4,3,2,3,4,4], J:[3,4,3,1,2,2,4,4,4,4],
+  K:[3,4,4,4,4,3,4,4,3,4]
+};
+const ENDLINE = {
+  A:[3,2,3,1,1,2,4,4,4,4], B:[4,1,2,1,2,1,1,1,1,2],
+  C:[4,2,4,3,3,2,3,4,3,4], D:[4,2,4,2,3,3,3,4,3,4],
+  H:[3,4,4,4,3,2,4,4,4,4], I:[4,4,4,4,4,3,3,4,4,4],
+  J:[2,2,3,2,1,3,4,4,3,2], K:[1,3,4,1,2,4,4,4,4,4],
+  L:[2,1,3,1,3,3,4,4,4,4]
+};
+
+const DIM_DEFS = [
+  {name:'Distance vs Friendship', pole1:'Distance', pole2:'Friendship', q1:0,q2:5,
+    trad:'Social distance needed', prog:'Teacher as friend',
+    tradFull:'A teacher must keep social distance from students to maintain discipline.',
+    progFull:'A teacher should be like a friend to their students.'},
+  {name:'Fixed vs Adaptive', pole1:'Fixed', pole2:'Adaptive', q1:1,q2:6,
+    trad:'Student must open up first', prog:'Teacher creates openness',
+    tradFull:'Students who are not willing to open up cannot develop a supportive relationship.',
+    progFull:'Teachers should create opportunities for less open students to open up.'},
+  {name:'Discipline vs Relationship', pole1:'Discipline', pole2:'Relationship', q1:2,q2:7,
+    trad:'Behave before learning', prog:'Understand emotional struggles',
+    tradFull:'A student must follow discipline before a teacher can make them learn.',
+    progFull:'Understanding a student\'s emotional struggles helps create safe space to learn.'},
+  {name:'Academic vs Holistic', pole1:'Academic', pole2:'Holistic', q1:3,q2:8,
+    trad:'Emotions outside classroom', prog:'Classroom is social space',
+    tradFull:'To focus on academics, emotional and social issues should stay outside the classroom.',
+    progFull:'The classroom is a social space where teaching must address emotional and social questions.'},
+  {name:'Perfect vs Growth', pole1:'Perfect', pole2:'Growth', q1:4,q2:9,
+    trad:'Avoid mistakes in front of students', prog:'Safe space to make errors',
+    tradFull:'Teachers should avoid making mistakes in front of students as it undermines authority.',
+    progFull:'Developing a safe space to make errors and seek feedback is important for learning.'},
+];
+
+const DEC_LABELS = [
+  'Q1\nSocial\ndistance','Q2\nOpenness\nneeded','Q3\nBehave\n→learn',
+  'Q4\nEmotions\nout','Q5\nAvoid\nmistakes','Q6\nTeacher\n=friend',
+  'Q7\nCreate\nopenness','Q8\nUnderstand\nstruggles',
+  'Q9\nClassroom\nsocial','Q10\nSafe\nto err'
+];
+const SCALE_TEXT = {1:'Not true',2:'A little true',3:'Somewhat true',4:'Very true'};
+const SURVEY_QS = [
+  'It is essential for a teacher to keep social distance from students to maintain discipline.',
+  'Students who are not willing to open up to their teachers cannot develop a supportive relationship with the teacher.',
+  'A student must follow discipline and behave properly before a teacher can do anything to make them learn.',
+  'To focus on academics, it is important to leave emotional & social issues/questions outside the classroom.',
+  'Teachers should avoid making mistakes or errors in front of students as it undermines their authority as a teacher.',
+  'A teacher should be like a friend to their students.',
+  'Some students are less open to their teachers than others and teachers should create opportunities for them to open up.',
+  "By understanding a student's emotional struggles and behavior, a teacher can create the necessary safe space for them to learn.",
+  'Classroom is a social space where emotional and social issues/questions are natural to come up and teaching must serve as a tool to address them.',
+  'Developing a safe space to make errors and seek feedback is important for continuous learning.'
+];
+
+// ── State ────────────────────────────────────────────────────────────
+let currentUser = null; // {label, name, role, username}
+let teamQuadrantChart = null;
+let hmView = 'baseline';
+let wallFilter = 'all';
+let goalCurrentPct = 50, goalDesiredPct = 75;
+
+// ── Supabase ─────────────────────────────────────────────────────────
+async function supa(method, table, params='', body=null) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(SUPA_URL+'/rest/v1/'+table+(params?'?'+params:''), {
+      method, signal: controller.signal,
+      headers: {
+        'Content-Type':'application/json',
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer '+SUPA_KEY,
+        'Prefer': method==='POST'?'return=representation':''
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(await res.text());
+    return res.status===204 ? null : res.json();
+  } catch(e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') throw new Error('Connection timed out. Please check your internet connection and try again.');
+    throw e;
+  }
+}
+
+// ── Login ────────────────────────────────────────────────────────────
+async function doLogin() {
+  const user = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value.trim();
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  if (!user||!pass) { showErr(errEl,'Please enter username and password.'); return; }
+  btn.textContent='Signing in...'; btn.disabled=true;
+  try {
+    const rows = await supa('GET','teacher_auth','select=label,name,role,username&username=eq.'+encodeURIComponent(user)+'&password=eq.'+encodeURIComponent(pass));
+    if (!rows || rows.length===0) { showErr(errEl,'Incorrect username or password.'); btn.textContent='Sign In'; btn.disabled=false; return; }
+    currentUser = rows[0];
+    localStorage.setItem('wbUser', JSON.stringify(currentUser));
+    startApp();
+  } catch(e) {
+    showErr(errEl, e.message || 'Connection error. Please check your internet connection and try again.');
+    btn.textContent='Sign In'; btn.disabled=false;
+  }
+}
+
+function showErr(el, msg) { el.textContent=msg; el.classList.remove('hidden'); }
+
+function toggleNavMobile() {
+  const m = document.getElementById('mobileNavMenu');
+  const isHidden = m.classList.contains('hidden');
+  m.classList.toggle('hidden');
+  // Add/remove overlay
+  var overlay = document.getElementById('navOverlay');
+  if(!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'navOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:40;background:rgba(0,0,0,0.25);';
+    overlay.onclick = function(){ closeMobileNav(); };
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = isHidden ? 'block' : 'none';
+}
+function closeMobileNav() {
+  const m = document.getElementById('mobileNavMenu');
+  if(m) m.classList.add('hidden');
+  const o = document.getElementById('navOverlay');
+  if(o) o.style.display = 'none';
+}
+
+function doLogout() {
+  currentUser=null;
+  localStorage.removeItem('wbUser');
+  document.getElementById('screen-app').style.display = 'none';
+  document.getElementById('screen-login').style.display = 'flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').classList.add('hidden');
+}
+
+
+function renderLeaderGuidance() {
+  var panel = document.getElementById('leaderGuidancePanel');
+  if(!panel) return;
+
+  var allLabels = Array.from(new Set(Object.keys(BASELINE).concat(Object.keys(ENDLINE))));
+
+  // ── Score each teacher ──────────────────────────────────────────────
+  function progScore(label) {
+    var data = ENDLINE[label] || BASELINE[label];
+    if(!data) return null;
+    var total = 0;
+    DIM_DEFS.forEach(function(d){ total += (data[d.q2] - data[d.q1]) + 3; });
+    return total / DIM_DEFS.length; // range 1-5
+  }
+  function dimSpread(dimIdx) {
+    var d = DIM_DEFS[dimIdx];
+    var vals = allLabels.filter(function(l){ return ENDLINE[l]||BASELINE[l]; })
+      .map(function(l){ var data=ENDLINE[l]||BASELINE[l]; return data[d.q2]-data[d.q1]; });
+    if(vals.length<2) return 0;
+    var m=vals.reduce(function(a,b){return a+b;},0)/vals.length;
+    return Math.sqrt(vals.reduce(function(s,v){return s+(v-m)*(v-m);},0)/vals.length);
+  }
+
+  // ── Group teachers ──────────────────────────────────────────────────
+  var groups = { structure:[], bridge:[], relationship:[] };
+  allLabels.sort().forEach(function(lbl){
+    var s = progScore(lbl);
+    if(s === null) return;
+    if(s < 2.8)      groups.structure.push(lbl);
+    else if(s <= 3.5) groups.bridge.push(lbl);
+    else              groups.relationship.push(lbl);
+  });
+
+  // ── Find top 2 friction dimensions ─────────────────────────────────
+  var spreads = DIM_DEFS.map(function(d,i){ return {i:i, d:d, sp:dimSpread(i)}; });
+  spreads.sort(function(a,b){ return b.sp-a.sp; });
+  var topFriction = spreads.slice(0,2).filter(function(s){ return s.sp > 0.8; });
+
+  var MIN_SHOW = 3; // min group size to show labels
+
+  function groupCard(key, label, color, border, textColor, bgColor) {
+    var members = groups[key];
+    var n = members.length;
+    if(n === 0) return '';
+    var html = '<div style="background:'+bgColor+';border:1.5px solid '+border+';border-radius:14px;padding:12px;flex:1;min-width:140px;">';
+    html += '<div style="font-size:11px;font-weight:700;color:'+textColor+';margin-bottom:8px;">&#9632; '+label+' ('+n+')</div>';
+    if(n < MIN_SHOW) {
+      html += '<div style="background:'+border+'33;border-radius:8px;padding:6px 8px;font-size:10px;color:'+textColor+';">&#9651; '+n+' teacher'+(n>1?'s':'')+(n===1?' — group too small to show individually':' — group too small to show individually')+'</div>';
+    } else {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+      members.forEach(function(lbl){
+        html += '<span style="font-size:10px;font-weight:600;color:'+textColor+';background:white;border:1px solid '+border+';border-radius:6px;padding:2px 7px;">Teacher '+lbl+'</span>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  var html = '';
+
+  // ── SECTION 1: Team Groupings ───────────────────────────────────────
+  html += '<div style="margin-bottom:20px;">';
+  html += '<h3 style="font-size:13px;font-weight:700;color:#1f2937;margin-bottom:3px;">Teacher Groupings by Current Orientation</h3>';
+  html += '<p style="font-size:11px;color:#6b7280;margin-bottom:12px;">How your teaching team clusters based on their latest disposition data — useful for designing PD pairings and collaborative activities. Groups with fewer than '+MIN_SHOW+' teachers do not show individual labels to protect anonymity.</p>';
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">';
+  html += groupCard('structure',    'Structure-Centred',    '#e11d48','#fca5a5','#9f1239','#fff1f2');
+  html += groupCard('bridge',       'Bridge-Building',      '#d97706','#fde68a','#92400e','#fffbeb');
+  html += groupCard('relationship', 'Relationship-Centred', '#059669','#6ee7b7','#065f46','#f0fdf4');
+  html += '</div>';
+
+  // Group meaning explanation
+  html += '<div style="background:#f8fafc;border-radius:10px;padding:10px 12px;font-size:11px;color:#374151;line-height:1.6;">';
+  html += '<strong>Structure-Centred</strong> teachers prioritise clear boundaries, discipline, and academic focus. ';
+  html += '<strong>Bridge-Building</strong> teachers hold both traditional and progressive dispositions simultaneously — navigating tension rather than resolving it. ';
+  html += '<strong>Relationship-Centred</strong> teachers prioritise warmth, emotional safety, and holistic development. ';
+  html += 'All three orientations are valid — and a team with all three can be a genuine strength if led well.';
+  html += '</div></div>';
+
+  // ── SECTION 2: Friction Points ──────────────────────────────────────
+  if(topFriction.length > 0) {
+    html += '<div style="background:#4338ca;border-radius:16px;padding:14px 16px;margin-bottom:20px;color:white;">';
+    html += '<div style="font-size:13px;font-weight:700;margin-bottom:6px;">&#128161; Understanding Potential Friction Points</div>';
+    html += '<p style="font-size:11px;line-height:1.6;opacity:0.9;margin-bottom:10px;"><strong>Why this matters:</strong> When teachers with different orientations collaborate on school initiatives, friction can arise from fundamentally different — but equally legitimate — assumptions about what effective teaching looks like. Understanding these differences is not about assigning fault; it is about designing smarter collaboration.</p>';
+
+    topFriction.forEach(function(fd) {
+      var d = fd.d;
+      html += '<div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;margin-bottom:8px;">';
+      html += '<div style="font-size:11px;font-weight:700;margin-bottom:4px;">'+d.name+' — highest variance in your team</div>';
+      html += '<p style="font-size:11px;line-height:1.6;opacity:0.9;margin-bottom:6px;">';
+      html += 'Some teachers lean strongly toward <em>'+d.pole1+'</em> while others lean toward <em>'+d.pole2+'</em>. ';
+      html += 'When planning school events, classroom policies, or student support structures, these teachers will start from genuinely different assumptions. ';
+      html += 'Without naming the difference, collaborative initiatives can stall silently — each teacher wondering why others are not "getting it."';
+      html += '</p>';
+      html += '<p style="font-size:11px;line-height:1.6;opacity:0.9;"><strong>Example:</strong> A '+d.pole2+'-oriented teacher might advocate for more student voice and emotional check-ins, while a '+d.pole1+'-oriented colleague sees consistent structure as essential to student safety. Both views are valid — and both can coexist if made explicit.</p>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // ── SECTION 3: Strategic Pairing ───────────────────────────────────
+  html += '<div style="margin-bottom:20px;">';
+  html += '<h3 style="font-size:13px;font-weight:700;color:#1f2937;margin-bottom:8px;">Strategic Pairing Suggestions</h3>';
+  html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+
+  html += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;">';
+  html += '<div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:3px;">Option 1 — Pair within orientation</div>';
+  html += '<p style="font-size:11px;color:#374151;line-height:1.6;margin:0;">Pair Structure-Centred teachers together and Relationship-Centred teachers together for co-planning or peer observation. This creates smoother co-implementation of new initiatives — less friction in the process, faster execution. Useful when rolling out a new curriculum structure or assessment system.</p>';
+  html += '</div>';
+
+  html += '<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:10px 12px;">';
+  html += '<div style="font-size:11px;font-weight:700;color:#6d28d9;margin-bottom:3px;">Option 2 — Pair across orientations with facilitation</div>';
+  html += '<p style="font-size:11px;color:#374151;line-height:1.6;margin:0;">Intentionally pair a Structure-Centred teacher with a Relationship-Centred teacher for professional learning conversations — with a Bridge-Building teacher or yourself facilitating. This turns potential tension into productive learning. Useful for building a shared language on student support, discipline policies, or parent engagement.</p>';
+  html += '</div>';
+
+  html += '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;">';
+  html += '<div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:3px;">Option 3 — Use Bridge-Building teachers as connectors</div>';
+  var bridgeN = groups.bridge.length;
+  var bridgeText = bridgeN > 0
+    ? 'Your '+bridgeN+' Bridge-Building teacher'+(bridgeN>1?'s hold':'holds')+' both orientations simultaneously.'
+    : 'Teachers who hold both orientations simultaneously';
+  html += '<p style="font-size:11px;color:#374151;line-height:1.6;margin:0;">'+bridgeText+' They can translate between the two orientations in team conversations — helping Structure-Centred and Relationship-Centred colleagues understand each other without either feeling criticised. Consider giving them informal facilitation roles in team meetings or PD sessions.</p>';
+  html += '</div>';
+  html += '</div></div>';
+
+  // ── SECTION 4: Question for staff meeting ──────────────────────────
+  var topDim = topFriction.length > 0 ? topFriction[0].d : DIM_DEFS[0];
+  html += '<div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:12px 14px;">';
+  html += '<div style="font-size:11px;font-weight:700;color:#6d28d9;margin-bottom:6px;">A question for your next staff meeting</div>';
+  html += '<p style="font-size:12px;color:#374151;line-height:1.7;font-style:italic;margin-bottom:8px;">';
+  html += '"We seem to hold genuinely different views on <strong>'+topDim.name+'</strong>. ';
+  html += 'I don\'t think any of us are wrong — I think we\'ve each built our practice from different experiences. ';
+  html += 'I\'d love to understand: what made you land where you did on this? And what would it mean for our students if we found even one shared practice here?"';
+  html += '</p>';
+  html += '<p style="font-size:10px;color:#9ca3af;margin:0;">This question invites story-sharing rather than debate — and opens the door to a common language without forcing consensus.</p>';
+  html += '</div>';
+
+  panel.innerHTML = html;
+}
+
+
+function populateWelcome() {
+  if(!currentUser) return;
+  var role = currentUser.role || 'teacher';
+  var name = currentUser.name || '';
+  var firstName = name.split(' ')[0];
+  var label = currentUser.label || '';
+
+  var heroEl    = document.getElementById('welcomeHero');
+  var roleLabel = document.getElementById('welcomeRoleLabel');
+  var nameEl    = document.getElementById('welcomeName');
+  var subEl     = document.getElementById('welcomeSubtitle');
+  var statsEl   = document.getElementById('welcomeStats');
+  if(!heroEl) return;
+
+  var lgc0 = document.getElementById('leaderGuidanceCard');
+  if(lgc0) lgc0.classList.add('hidden');
+  if(role==='facilitator') {
+    if(roleLabel) roleLabel.textContent = 'Facilitator View';
+    if(nameEl)    nameEl.textContent = 'Welcome, ' + firstName;
+    if(subEl)     subEl.textContent = 'Explore your teachers\' profiles, team patterns, and shifts across the year.';
+    var lgp2 = document.getElementById('leaderGuidancePanel');
+    var htc2 = document.getElementById('howToCard');
+    if(lgp2) lgp2.classList.add('hidden');
+    if(htc2) htc2.classList.remove('hidden');
+  } else if(role==='leader') {
+    if(roleLabel) roleLabel.textContent = 'School Leadership View';
+    if(nameEl)    nameEl.textContent = 'Welcome, ' + firstName;
+    if(subEl)     subEl.textContent = 'Explore your teachers\' profiles and team patterns. Teacher identities are not shown.';
+    // Show leader guidance, hide generic how-to
+    var lgp = document.getElementById('leaderGuidancePanel');
+    var htc = document.getElementById('howToCard');
+    if(lgp) { lgp.classList.remove('hidden'); renderLeaderCard(); }
+    if(htc) htc.classList.add('hidden');
+    var lgc = document.getElementById('leaderGuidanceCard');
+    if(lgc) { lgc.classList.remove('hidden'); setTimeout(renderLeaderGuidance, 100); }
+  } else {
+    if(roleLabel) roleLabel.textContent = 'Professional Development Program';
+    if(nameEl)    nameEl.textContent = 'Welcome back, ' + firstName;
+    if(subEl)     subEl.textContent = 'Your personal disposition journey through this program. See how your profile sits within the team and reflect on what shifted over the year.';
+    var lgp3 = document.getElementById('leaderGuidancePanel');
+    var htc3 = document.getElementById('howToCard');
+    if(lgp3) lgp3.classList.add('hidden');
+    if(htc3) htc3.classList.remove('hidden');
+  }
+
+  // Stats row
+  if(statsEl) {
+    var hasBase = !!BASELINE[label];
+    var hasEnd  = !!ENDLINE[label];
+    var stats = [];
+    if(hasBase && hasEnd) {
+      // Compute overall shift
+      var shift = 0, count = 0;
+      DIM_DEFS.forEach(function(d) {
+        var ns = (BASELINE[label][d.q2]-BASELINE[label][d.q1]);
+        var as = (ENDLINE[label][d.q2]-ENDLINE[label][d.q1]);
+        shift += (as-ns); count++;
+      });
+      var avg = count ? (shift/count).toFixed(2) : null;
+      var dir = avg > 0 ? '+' : '';
+      stats.push({val: 'Progressive', sub: 'Pre-program orientation', color:'#34d399'});
+      stats.push({val: 'Progressive', sub: 'Post-program orientation', color:'#34d399'});
+      if(avg !== null) stats.push({val: dir+avg, sub: 'Overall shift', color: avg>0?'#34d399':avg<0?'#f87171':'#a5b4fc'});
+      stats.push({val: '11', sub: 'Cohort size', color:'#a5b4fc'});
+    } else if(role==='facilitator' || role==='leader') {
+      var totalTeachers = Object.keys(BASELINE).length + Object.keys(ENDLINE).filter(function(l){return !BASELINE[l];}).length;
+      stats.push({val: Object.keys(BASELINE).length+'', sub: 'November surveys', color:'#fcd34d'});
+      stats.push({val: Object.keys(ENDLINE).length+'', sub: 'April surveys', color:'#34d399'});
+      stats.push({val: '5', sub: 'Dimensions', color:'#a5b4fc'});
+      stats.push({val: totalTeachers+'', sub: 'Teachers', color:'#f9a8d4'});
+    } else if(hasBase) {
+      stats.push({val: 'November', sub: 'Survey completed', color:'#fcd34d'});
+      stats.push({val: '5', sub: 'Dimensions', color:'#a5b4fc'});
+    }
+    statsEl.innerHTML = stats.map(function(s){
+      return '<div style="padding:12px 14px;text-align:center;">'
+        +'<div style="font-size:18px;font-weight:800;color:'+s.color+';line-height:1.1;">'+s.val+'</div>'
+        +'<div style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">'+s.sub+'</div>'
+        +'</div>';
+    }).join('');
+    // Adjust grid cols
+    statsEl.style.gridTemplateColumns = 'repeat('+stats.length+',1fr)';
+  }
+}
+
+function startApp() {
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-app').style.display = 'block';
+  setTimeout(populateWelcome, 50);
+  const isFacilitator = currentUser.role === 'facilitator';
+  const isLeader = currentUser.role === 'leader';
+  document.getElementById('navUserLabel').textContent =
+    isFacilitator ? '(Facilitator — '+currentUser.name+')' : '('+currentUser.name+')';
+  buildSurveyQTable();
+  goTo('beliefs');
+  populateWelcome();
+}
+
+// ── Navigation ───────────────────────────────────────────────────────
+function goTo(page) {
+  const mn = document.getElementById('mobileNavMenu');
+  if(mn) mn.classList.add('hidden');
+  const ov = document.getElementById('navOverlay'); if(ov) ov.style.display='none';
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.remove('active');
+    if(b.dataset.screen===page) b.classList.add('active');
+  });
+  document.getElementById('page-'+page).classList.remove('hidden');
+  window.scrollTo(0,0);
+  if(page==='profile') renderProfile();
+  if(page==='team') { renderQuadrant(); renderHeatmap(); setTimeout(renderHmReflect, 100); }
+  if(page==='scenarios') { renderScenarios(); }
+  if(page==='beliefs') { setTimeout(renderDummyDecagon, 100); }
+  if(page==='wall') loadWall();
+}
+
+let dummyChart = null;
+function renderDummyDecagon() {
+  const canvas = document.getElementById('dummyDecagon');
+  if(!canvas) return;
+  if(dummyChart) { dummyChart.destroy(); dummyChart = null; }
+  const raw = [3,2,3,1,2,3,4,4,3,3];
+  dummyChart = new Chart(canvas, {
+    type:'radar',
+    data:{
+      labels: DEC_LABELS,
+      datasets:[
+        { label:'Traditional', data:[raw[0],raw[1],raw[2],raw[3],raw[4],0,0,0,0,0],
+          borderColor:'#b45a1e', borderWidth:2.5, backgroundColor:'rgba(180,90,30,0.15)',
+          pointBackgroundColor:['#b45a1e','#b45a1e','#b45a1e','#b45a1e','#b45a1e','transparent','transparent','transparent','transparent','transparent'],
+          pointRadius:[7,7,7,7,7,0,0,0,0,0], pointBorderColor:'transparent' },
+        { label:'Progressive', data:[0,0,0,0,0,raw[5],raw[6],raw[7],raw[8],raw[9]],
+          borderColor:'#0f7370', borderWidth:2.5, backgroundColor:'rgba(15,115,110,0.15)',
+          pointBackgroundColor:['transparent','transparent','transparent','transparent','transparent','#0f7370','#0f7370','#0f7370','#0f7370','#0f7370'],
+          pointRadius:[0,0,0,0,0,7,7,7,7,7], pointBorderColor:'transparent' }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{r:{min:0,max:4,
+        ticks:{stepSize:1,callback:v=>SCALE_TEXT[v]||'',font:{size:7},backdropColor:'transparent'},
+        pointLabels:{font:{size:7},color:ctx=>ctx.index<5?'#b45a1e':'#0f7370'},
+        grid:{color:'#e5e7eb'},angleLines:{color:'#e5e7eb'}}},
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>'Example: '+SCALE_TEXT[ctx.raw]}}}
+    }
+  });
+}
+
+function toggleDimCard(id) {
+  const el = document.getElementById(id);
+  const chevron = document.getElementById(id+'-chevron');
+  if(!el) return;
+  const isHidden = el.classList.contains('hidden');
+  el.classList.toggle('hidden');
+  if(chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+}
+
+function toggleEl(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('hidden');
+  const chevron = document.getElementById(id+'Chevron');
+  if(chevron) chevron.style.transform = el.classList.contains('hidden') ? '' : 'rotate(90deg)';
+}
+
+// ── Color ────────────────────────────────────────────────────────────
+function gradColor(val,min,max) {
+  const t = Math.max(0,Math.min(1,(val-min)/(max-min)));
+  const stops=[{t:0,r:180,g:90,b:30},{t:0.25,r:230,g:165,b:90},{t:0.5,r:245,g:240,b:225},{t:0.75,r:100,g:190,b:175},{t:1,r:15,g:115,b:110}];
+  let s0=stops[0],s1=stops[1];
+  for(let i=0;i<stops.length-1;i++){if(t>=stops[i].t&&t<=stops[i+1].t){s0=stops[i];s1=stops[i+1];break;}}
+  const f=s1.t===s0.t?0:(t-s0.t)/(s1.t-s0.t);
+  const r=Math.round(s0.r+f*(s1.r-s0.r)),g=Math.round(s0.g+f*(s1.g-s0.g)),b=Math.round(s0.b+f*(s1.b-s0.b));
+  const br=0.299*r+0.587*g+0.114*b;
+  return {bg:`rgb(${r},${g},${b})`,text:br<140?'white':'#374151'};
+}
+
+// ── Profile ──────────────────────────────────────────────────────────
+function renderProfile() {
+  if(!currentUser) return;
+  const isFacilitator = currentUser.role === 'facilitator';
+
+  // Show/hide facilitator teacher selector
+  const selectorWrap = document.getElementById('facilitatorProfileSelector');
+  const subtitle = document.getElementById('profileSubtitle');
+  const isPrivileged = isFacilitator || currentUser.role==='leader';
+  if(isPrivileged) {
+    selectorWrap.classList.remove('hidden');
+    const lkw = document.getElementById('labelKeyWrap'); if(lkw && isFacilitator) lkw.classList.remove('hidden');
+    subtitle.textContent = isFacilitator ? 'Viewing as facilitator — select any teacher to see their profile.' : 'Select a teacher profile to view.';
+    // Populate selector if empty
+    const sel = document.getElementById('facilitatorTeacherSelect');
+    if(sel.options.length === 0) {
+      const allLabels = new Set([...Object.keys(BASELINE),...Object.keys(ENDLINE)]);
+      const NAMES = {A:'Hunny Taneja',B:'Pooja Arora',C:'Anchal Agarwal',D:'Sheenu Goel',
+        E:'Vikas Juyal',F:'Sakshi Kapoor',G:'Vineet Masih',H:'Bosky',I:'Dr. Saurabh Bhardwaj',
+        J:'Shivani Chaudhary',K:'Shital Rani',L:'Reeti Singh Mahalwar'};
+      Array.from(allLabels).sort().forEach(lbl => {
+        const opt = new Option('Teacher ' + lbl, lbl);
+        sel.appendChild(opt);
+      });
+    }
+  } else {
+    selectorWrap.classList.add('hidden');
+    const lkw2 = document.getElementById('labelKeyWrap'); if(lkw2) lkw2.classList.add('hidden');
+    subtitle.textContent = 'Only you can see this page. Your profile is completely private.';
+  }
+
+  const label = isPrivileged
+    ? (document.getElementById('facilitatorTeacherSelect').value || Array.from(new Set([...Object.keys(BASELINE),...Object.keys(ENDLINE)]).values()).sort()[0])
+    : currentUser.label;
+
+  const hasBase = !!BASELINE[label];
+  const hasEnd = !!ENDLINE[label];
+  const notice = document.getElementById('profileDataNotice');
+  const decNotice = document.getElementById('decagonNotice');
+
+  if(!hasBase && !hasEnd) {
+    notice.textContent='No survey data found for this profile.';
+    notice.classList.remove('hidden');
+    return;
+  }
+  notice.classList.add('hidden');
+
+  // Show/hide decagon panels based on data availability
+  const novWrap = document.getElementById('novemberDecagonWrap');
+  const aprWrap = document.getElementById('aprilDecagonWrap');
+  const novTitle = novWrap ? novWrap.querySelector('h3') : null;
+  const aprTitle = aprWrap ? aprWrap.querySelector('h3') : null;
+
+  if(!hasBase && hasEnd) {
+    novWrap.style.display='none';
+    aprWrap.style.gridColumn='1/-1';
+    decNotice.textContent=(isPrivileged?'Teacher '+label:'You')+' joined after November \u2014 only April data is available.';
+    decNotice.classList.remove('hidden');
+  } else if(hasBase && !hasEnd) {
+    aprWrap.style.display='none';
+    novWrap.style.gridColumn='1/-1';
+    decNotice.textContent=(isPrivileged?'Teacher '+label:'You')+"'s April survey was not completed. Only November data is shown.";
+    decNotice.classList.remove('hidden');
+  } else {
+    novWrap.style.display='';
+    aprWrap.style.display='';
+    novWrap.style.gridColumn='';
+    aprWrap.style.gridColumn='';
+    decNotice.classList.add('hidden');
+  }
+
+  // Update title for facilitator
+  if(isFacilitator) {
+    const NAMES = {A:'Hunny Taneja',B:'Pooja Arora',C:'Anchal Agarwal',D:'Sheenu Goel',
+      E:'Vikas Juyal',F:'Sakshi Kapoor',G:'Vineet Masih',H:'Bosky',I:'Dr. Saurabh Bhardwaj',
+      J:'Shivani Chaudhary',K:'Shital Rani',L:'Reeti Singh Mahalwar'};
+    if(novTitle) novTitle.textContent = (isPrivileged ? 'Teacher ' + label : (currentUser.name||'You').split(' ')[0]) + ' — November';
+    if(aprTitle) aprTitle.textContent = (isPrivileged ? 'Teacher ' + label : (currentUser.name||'You').split(' ')[0]) + ' — April';
+  } else {
+    if(novTitle) novTitle.textContent = 'November (Baseline)';
+    if(aprTitle) aprTitle.textContent = 'April (Endline)';
+  }
+
+  renderMyDecagon(label, hasBase, hasEnd);
+  renderMyDualBars(label, hasBase, hasEnd);
+}
+
+function onFacilitatorSelectChange() {
+  renderProfile();
+}
+
+let myDecagonChartBase = null, myDecagonChartEnd = null;
+
+function buildSingleDecagon(raw, canvasId, existing) {
+  if(existing){existing.destroy();existing=null;}
+  const cfg = {
+    type:'radar',
+    data:{
+      labels: DEC_LABELS,
+      datasets:[
+        { label:'Traditional', data:[raw[0],raw[1],raw[2],raw[3],raw[4],0,0,0,0,0],
+          borderColor:'#b45a1e', borderWidth:2.5, backgroundColor:'rgba(180,90,30,0.15)',
+          pointBackgroundColor:['#b45a1e','#b45a1e','#b45a1e','#b45a1e','#b45a1e','transparent','transparent','transparent','transparent','transparent'],
+          pointRadius:[8,8,8,8,8,0,0,0,0,0], pointBorderColor:'transparent' },
+        { label:'Progressive', data:[0,0,0,0,0,raw[5],raw[6],raw[7],raw[8],raw[9]],
+          borderColor:'#0f7370', borderWidth:2.5, backgroundColor:'rgba(15,115,110,0.15)',
+          pointBackgroundColor:['transparent','transparent','transparent','transparent','transparent','#0f7370','#0f7370','#0f7370','#0f7370','#0f7370'],
+          pointRadius:[0,0,0,0,0,8,8,8,8,8], pointBorderColor:'transparent' }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{r:{min:0,max:4,ticks:{stepSize:1,callback:v=>SCALE_TEXT[v]||'',font:{size:8},backdropColor:'transparent'},
+        pointLabels:{font:{size:8},color:ctx=>ctx.index<5?'#b45a1e':'#0f7370'},
+        grid:{color:'#e5e7eb'},angleLines:{color:'#e5e7eb'}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>SCALE_TEXT[ctx.raw]||''}}}
+    }
+  };
+  return new Chart(document.getElementById(canvasId), cfg);
+}
+
+function renderMyDecagon(label, hasBase, hasEnd) {
+  if(myDecagonChartBase){myDecagonChartBase.destroy();myDecagonChartBase=null;}
+  if(myDecagonChartEnd){myDecagonChartEnd.destroy();myDecagonChartEnd=null;}
+  if(hasBase) myDecagonChartBase = buildSingleDecagon(BASELINE[label], 'myDecagonBase', null);
+  if(hasEnd)  myDecagonChartEnd  = buildSingleDecagon(ENDLINE[label],  'myDecagonEnd',  null);
+}
+
+function renderMyDualBars(label, hasBase, hasEnd) {
+  const base = BASELINE[label];
+  const end = ENDLINE[label];
+  const container = document.getElementById('myDualBars');
+  const both = hasBase && hasEnd;
+
+  // Legend
+  let html = '<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">';
+  if(hasBase) html += '<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#6b7280;"><span style="display:inline-block;width:28px;height:10px;border-radius:5px;border:2px solid #b45a1e;background:transparent;"></span>November (outline)</span>';
+  if(hasEnd)  html += '<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#6b7280;"><span style="display:inline-block;width:28px;height:10px;border-radius:5px;background:#b45a1e;opacity:0.85;"></span>April (solid)</span>';
+  if(both)    html += '<span style="font-size:10px;color:#9ca3af;font-style:italic;">Solid bar further right = stronger agreement in April vs November</span>';
+  html += '</div>';
+
+  DIM_DEFS.forEach(d => {
+    html += `<div style="margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid #f3f4f6;">
+      <div style="font-size:13px;font-weight:700;color:#1f2937;margin-bottom:12px;">${d.name}</div>`;
+
+    // Helper: render one overlaid bar row
+    function barRow(qIdx, color, labelText) {
+      const vBase = hasBase ? base[qIdx] : null;
+      const vEnd  = hasEnd  ? end[qIdx]  : null;
+      const pBase = vBase ? ((vBase-1)/3)*100 : 0;
+      const pEnd  = vEnd  ? ((vEnd-1)/3)*100  : 0;
+
+      // Change indicator
+      let changeTag = '';
+      if(both && vBase && vEnd) {
+        const diff = vEnd - vBase;
+        if(diff > 0)      changeTag = `<span style="font-size:9px;background:#d1fae5;color:#065f46;padding:1px 6px;border-radius:10px;margin-left:6px;">▲ ${diff} step${diff>1?'s':''}</span>`;
+        else if(diff < 0) changeTag = `<span style="font-size:9px;background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:10px;margin-left:6px;">▼ ${Math.abs(diff)} step${Math.abs(diff)>1?'s':''}</span>`;
+        else              changeTag = `<span style="font-size:9px;background:#f3f4f6;color:#6b7280;padding:1px 6px;border-radius:10px;margin-left:6px;">→ no change</span>`;
+      }
+
+      let row = `<div style="margin-bottom:10px;">
+        <div style="display:flex;align-items:center;margin-bottom:4px;">
+          <span style="font-size:10px;font-weight:700;color:${color};">Q${qIdx+1}: ${labelText}</span>
+          ${changeTag}
+        </div>
+        <div style="position:relative;height:14px;background:#f3f4f6;border-radius:7px;overflow:visible;">`;
+
+      // November outline bar (underneath)
+      if(hasBase && vBase) {
+        row += `<div style="position:absolute;top:0;left:0;height:100%;width:${pBase}%;border-radius:7px;background:transparent;border:2px solid ${color};box-sizing:border-box;"></div>`;
+      }
+      // April solid bar (on top, slightly inset)
+      if(hasEnd && vEnd) {
+        row += `<div style="position:absolute;top:2px;left:2px;height:calc(100% - 4px);width:calc(${pEnd}% - 2px);border-radius:5px;background:${color};opacity:0.8;transition:width 0.3s;"></div>`;
+      }
+
+      row += `</div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px;font-size:9px;color:#6b7280;">`;
+      if(hasBase && vBase) row += `<span>Nov: <strong style="color:#374151;">${SCALE_TEXT[vBase]}</strong></span>`;
+      if(hasEnd && vEnd)   row += `<span style="margin-left:auto;">Apr: <strong style="color:#374151;">${SCALE_TEXT[vEnd]}</strong></span>`;
+      row += `</div></div>`;
+      return row;
+    }
+
+    html += barRow(d.q1, '#b45a1e', d.trad);
+    html += barRow(d.q2, '#0f7370', d.prog);
+    html += '</div>';
+  });
+
+  html += '<div style="font-size:10px;color:#9ca3af;display:flex;justify-content:space-between;"><span>Not true</span><span>Very true</span></div>';
+  container.innerHTML = html;
+}
+
+// ── Survey Q table ────────────────────────────────────────────────────
+function buildSurveyQTable() {
+  const labels = ['Social distance','Openness needed','Behave→learn','Emotions out','Avoid mistakes','Teacher=friend','Create openness','Understand struggles','Classroom social','Safe to err'];
+  let html = '<div style="background:#4f46e5;color:white;display:grid;grid-template-columns:40px 120px 1fr;gap:8px;padding:10px 14px;font-size:11px;font-weight:700;">' +
+    '<div>#</div><div>Short label</div><div>Statement</div></div>';
+  SURVEY_QS.forEach((q,i) => {
+    const isTraditional = i < 5;
+    const bg = isTraditional ? 'white' : '#eef2ff';
+    const numColor = isTraditional ? '#4f46e5' : '#7c3aed';
+    html += `<div style="background:${bg};display:grid;grid-template-columns:40px 120px 1fr;gap:8px;padding:10px 14px;border-top:1px solid #e5e7eb;font-size:12px;">
+      <div style="font-weight:700;color:${numColor};">Q${i+1}</div>
+      <div style="color:#6b7280;font-weight:600;">${labels[i]}</div>
+      <div style="color:#374151;">${q}</div>
+    </div>`;
+  });
+  html += '<div style="background:#f9fafb;padding:8px 14px;display:flex;gap:20px;border-top:1px solid #e5e7eb;font-size:11px;">' +
+    '<span style="color:#4f46e5;font-weight:600;">Q1–Q5: Traditional dispositions</span>' +
+    '<span style="color:#7c3aed;font-weight:600;">Q6–Q10: Progressive dispositions</span></div>';
+  document.getElementById('surveyQTable').innerHTML = html;
+}
+
+// ── Team quadrant ────────────────────────────────────────────────────
+let quadrantView = 'apr'; // 'apr' | 'nov' | 'me' | 'all'
+let quadrantJitter = {}; // stable jitter per label
+
+function setQView(v) {
+  quadrantView = v;
+  document.querySelectorAll('.qv-btn').forEach(b => {
+    const on = b.id === 'qv-' + v;
+    b.className = 'qv-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all ' +
+      (on ? 'border-indigo-400 bg-indigo-600 text-white' : 'border-indigo-200 bg-white text-indigo-700');
+  });
+  const canvas = document.getElementById('teamQuadrant');
+  if(canvas) {
+    canvas.style.transition = 'opacity 0.25s ease';
+    canvas.style.opacity = '0';
+    setTimeout(function() { renderQuadrant(); canvas.style.opacity = '1'; }, 250);
+  } else { renderQuadrant(); }
+}
+
+function getQuadrantName(x, y) {
+  const highX = x > 2.5, highY = y > 2.5;
+  if(!highX && highY)  return 'top-left';
+  if(highX && highY)   return 'top-right';
+  if(!highX && !highY) return 'bottom-left';
+  return 'bottom-right';
+}
+
+function interpretQuadrant(dimIdx, myLabel, isFacilitator) {
+  var d = DIM_DEFS[dimIdx];
+  var panel = document.getElementById('quadrantInterpret');
+  if(!panel) return;
+  var v = quadrantView;
+  var allLabels = Array.from(new Set(Object.keys(BASELINE).concat(Object.keys(ENDLINE))));
+
+  function qName(x,y){ return x<=2.5&&y>2.5?'top-left':x>2.5&&y>2.5?'top-right':x<=2.5&&y<=2.5?'bottom-left':'bottom-right'; }
+
+  var qMeaning = {
+    'top-left':    {short:'Progressive, not traditional', color:'#0f7370', long:'You lean toward the progressive disposition without strongly holding the traditional one. Your practice likely reflects '+d.pole2+'.'},
+    'top-right':   {short:'Holds both simultaneously',    color:'#6366f1', long:'You hold both dispositions actively. This is the most complex position -- you are navigating the tension rather than resolving it in one direction.'},
+    'bottom-left': {short:'Neither strongly held',        color:'#6b7280', long:'You hold neither disposition very strongly here. This can mean you are still forming your view, or this dimension feels less relevant right now.'},
+    'bottom-right':{short:'Traditional, not progressive', color:'#b45a1e', long:'You lean toward the traditional disposition without strongly holding the progressive one. Your practice likely reflects '+d.pole1+'.'},
+  };
+
+  function shiftDesc(from, to) {
+    if(from===to) return 'Your quadrant position is the same as November, though your strength within it may have shifted.';
+    var m = {
+      'bottom-right_top-right': 'Your progressive disposition strengthened while your traditional one stayed -- you moved from traditional-leaning to holding both. Your thinking is expanding.',
+      'top-right_top-left':     'Your traditional disposition loosened while your progressive stayed strong -- from holding both to leaning more progressive.',
+      'bottom-right_top-left':  'A significant shift -- from strongly traditional to strongly progressive, crossing the centre of this dimension.',
+      'top-left_top-right':     'Your traditional disposition strengthened -- from leaning progressive to holding both, embracing the tension.',
+      'bottom-left_top-left':   'Your progressive disposition strengthened -- you moved upward toward '+d.pole2+'.',
+      'bottom-left_top-right':  'Both dispositions strengthened -- a broad opening toward the full complexity of this dimension.',
+      'bottom-left_bottom-right':'Your traditional disposition strengthened while your progressive stayed low.',
+      'top-right_bottom-right': 'Your progressive disposition weakened while your traditional stayed -- from holding both to traditional-leaning.',
+      'top-right_bottom-left':  'Both dispositions weakened -- from holding both to holding neither strongly.',
+      'bottom-right_bottom-left':'Your traditional disposition weakened -- you moved toward holding neither strongly.',
+      'top-left_bottom-right':  'A significant reversal -- from strongly progressive to strongly traditional on this dimension.',
+    };
+    return m[from+'_'+to] || 'You shifted quadrant between November and April -- your position changed meaningfully.';
+  }
+
+  var teamApr=[], teamNov=[];
+  allLabels.forEach(function(lbl){
+    if(ENDLINE[lbl])  teamApr.push({lbl:lbl, q:qName(ENDLINE[lbl][d.q1],ENDLINE[lbl][d.q2])});
+    if(BASELINE[lbl]) teamNov.push({lbl:lbl, q:qName(BASELINE[lbl][d.q1],BASELINE[lbl][d.q2])});
+  });
+  var aprC={'top-left':0,'top-right':0,'bottom-left':0,'bottom-right':0};
+  var novC={'top-left':0,'top-right':0,'bottom-left':0,'bottom-right':0};
+  teamApr.forEach(function(t){aprC[t.q]++;}); teamNov.forEach(function(t){novC[t.q]++;});
+
+  function spreadDesc(counts,total){
+    var occ=Object.values(counts).filter(function(c){return c>0;}).length;
+    var max=Math.max.apply(null,Object.values(counts));
+    if(occ===1) return 'the whole team clusters in the same quadrant -- strong collective alignment.';
+    if(occ===2&&max>=total*0.7) return 'the team is mostly clustered with a small number in a different position.';
+    if(occ===2) return 'the team is split across two positions on this dimension.';
+    return 'the team is broadly spread -- a wide range of dispositions exists within the group.';
+  }
+
+  var myApr  = myLabel&&ENDLINE[myLabel]  ? {x:ENDLINE[myLabel][d.q1],  y:ENDLINE[myLabel][d.q2]}  : null;
+  var myNov  = myLabel&&BASELINE[myLabel] ? {x:BASELINE[myLabel][d.q1], y:BASELINE[myLabel][d.q2]} : null;
+  var myQApr = myApr ? qName(myApr.x,myApr.y) : null;
+  var myQNov = myNov ? qName(myNov.x,myNov.y) : null;
+  var sameQApr = myQApr ? teamApr.filter(function(t){return t.q===myQApr&&t.lbl!==myLabel;}).length : 0;
+  var sameQNov = myQNov ? teamNov.filter(function(t){return t.q===myQNov&&t.lbl!==myLabel;}).length : 0;
+  var movedSameDir = myQNov&&myQApr&&myQNov!==myQApr ?
+    allLabels.filter(function(lbl){return lbl!==myLabel&&BASELINE[lbl]&&ENDLINE[lbl]&&qName(BASELINE[lbl][d.q1],BASELINE[lbl][d.q2])!==qName(ENDLINE[lbl][d.q1],ENDLINE[lbl][d.q2]);}).length : 0;
+
+  var vLabel = v==='apr'?'Team in April':v==='nov'?'Team in November':v==='me'?'Your journey':'All journeys';
+  var html = '<div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">'+d.name+' &mdash; '+vLabel+'</div>';
+
+  if(v==='apr'||v==='nov'){
+    var counts=v==='apr'?aprC:novC, total=v==='apr'?teamApr.length:teamNov.length, period=v==='apr'?'April':'November';
+    html+='<p style="margin-bottom:8px;">In <strong>'+period+'</strong>, '+spreadDesc(counts,total)+'</p>';
+    var sorted=Object.entries(counts).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;});
+    if(sorted[0]&&sorted[0][1]>total/2){var qm=qMeaning[sorted[0][0]];html+='<p style="margin-bottom:8px;">Most of your team sits in the <strong style="color:'+qm.color+'">'+qm.short+'</strong> quadrant on this dimension.</p>';}
+    else if(sorted.length>=3){html+='<p style="margin-bottom:8px;">Your team is widely spread on <strong>'+d.name+'</strong> -- different teachers hold very different positions.</p>';}
+    var myQ=v==='apr'?myQApr:myQNov, sameCount=v==='apr'?sameQApr:sameQNov;
+    if(myQ&&!isFacilitator){var qm=qMeaning[myQ];
+      html+='<div style="background:white;border:1px solid #c7d2fe;border-radius:8px;padding:10px 12px;margin-top:8px;">'
+        +'<p style="font-size:11px;font-weight:700;color:#4338ca;margin-bottom:4px;">Your position in '+period+'</p>'
+        +'<p style="margin-bottom:4px;"><strong style="color:'+qm.color+'">'+qm.short+'</strong> &mdash; '+qm.long+'</p>'
+        +(sameCount>0?'<p style="font-size:11px;color:#6b7280;margin-top:4px;">'+sameCount+' colleague'+(sameCount>1?'s are':' is')+' in the same quadrant as you in '+period+'.</p>':'<p style="font-size:11px;color:#6b7280;margin-top:4px;">No other colleague shares your quadrant in '+period+' on this dimension.</p>')
+        +'</div>';
+    }
+  }
+
+  if(v==='me'&&!isFacilitator){
+    if(myQApr&&myQNov){var qmA=qMeaning[myQApr],qmN=qMeaning[myQNov];
+      html+='<div style="background:white;border:1px solid #c7d2fe;border-radius:8px;padding:10px 12px;margin-bottom:10px;">'
+        +'<p style="font-size:11px;font-weight:700;color:#4338ca;margin-bottom:6px;">Your journey on '+d.name+'</p>'
+        +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">'
+        +'<div style="background:#fef3c7;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;color:#92400e;">November: '+qmN.short+'</div>'
+        +'<span style="color:#9ca3af;">&rarr;</span>'
+        +'<div style="background:#ede9fe;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;color:#4338ca;">April: '+qmA.short+'</div>'
+        +'</div>'
+        +'<p style="margin-bottom:6px;">'+shiftDesc(myQNov,myQApr)+'</p>'
+        +'<p style="font-size:11px;color:#6b7280;margin-bottom:4px;"><strong>In April</strong>: '+qmA.long+'</p>'
+        +(movedSameDir>0?'<p style="font-size:11px;color:#6b7280;">'+movedSameDir+' colleague'+(movedSameDir>1?'s also shifted':'also shifted')+' quadrant on this dimension -- you are not alone.</p>':(myQNov!==myQApr?'<p style="font-size:11px;color:#6b7280;">Your shift on this dimension is relatively unique in the team.</p>':''))
+        +'</div>';
+      html+='<p style="margin-bottom:6px;">Across the team in April, '+spreadDesc(aprC,teamApr.length)+'</p>';
+      if(sameQApr>0) html+='<p style="font-size:11px;color:#6b7280;">'+sameQApr+' colleague'+(sameQApr>1?'s share':'shares')+' your April position on this dimension.</p>';
+    } else if(myQApr&&!myQNov){var qm=qMeaning[myQApr];
+      html+='<p style="margin-bottom:8px;"><strong>You joined after November</strong>, so only your April position is available.</p>'
+        +'<div style="background:white;border:1px solid #c7d2fe;border-radius:8px;padding:10px 12px;">'
+        +'<p><strong style="color:'+qm.color+'">'+qm.short+'</strong> &mdash; '+qm.long+'</p></div>';
+    } else if(myQNov&&!myQApr){var qm=qMeaning[myQNov];
+      html+='<p style="margin-bottom:8px;"><strong>Your April survey was not completed</strong>, so only your November position is available.</p>'
+        +'<div style="background:white;border:1px solid #c7d2fe;border-radius:8px;padding:10px 12px;">'
+        +'<p><strong style="color:'+qm.color+'">'+qm.short+'</strong> &mdash; '+qm.long+'</p></div>';
+    }
+  }
+
+  if(v==='all'){
+    var movers=allLabels.filter(function(lbl){return BASELINE[lbl]&&ENDLINE[lbl]&&qName(BASELINE[lbl][d.q1],BASELINE[lbl][d.q2])!==qName(ENDLINE[lbl][d.q1],ENDLINE[lbl][d.q2]);});
+    var stable=allLabels.filter(function(lbl){return BASELINE[lbl]&&ENDLINE[lbl]&&qName(BASELINE[lbl][d.q1],BASELINE[lbl][d.q2])===qName(ENDLINE[lbl][d.q1],ENDLINE[lbl][d.q2]);});
+    if(movers.length===0) html+='<p style="margin-bottom:8px;">On this dimension, the team\'s positions remained stable between November and April -- no one crossed a quadrant boundary.</p>';
+    else if(movers.length>=stable.length) html+='<p style="margin-bottom:8px;">This dimension saw significant movement -- most of the team shifted quadrant between November and April.</p>';
+    else html+='<p style="margin-bottom:8px;">Some movement is visible -- a portion of the team shifted quadrant on this dimension, while others stayed in place.</p>';
+    html+='<p style="margin-bottom:6px;">In April, '+spreadDesc(aprC,teamApr.length)+'</p>';
+    html+='<p style="margin-bottom:8px;">In November, '+spreadDesc(novC,teamNov.length)+'</p>';
+    if(myQApr&&myQNov&&!isFacilitator){var qmA=qMeaning[myQApr],qmN=qMeaning[myQNov];
+      html+='<div style="background:white;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-top:8px;">'
+        +'<p style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:6px;">Your journey (amber arrow)</p>'
+        +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">'
+        +'<div style="background:#fef3c7;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:#92400e;">Nov: '+qmN.short+'</div>'
+        +'<span style="color:#9ca3af;">&rarr;</span>'
+        +'<div style="background:#ede9fe;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:#4338ca;">Apr: '+qmA.short+'</div>'
+        +'</div>'
+        +'<p style="font-size:11px;color:#4b5563;">'+shiftDesc(myQNov,myQApr)+'</p></div>';
+    }
+  }
+
+  var si = [
+    "When teachers hold very different positions on Distance vs Friendship, students experience inconsistency in how emotionally safe they feel with different adults in the school.",
+    "Less confident students may only receive support from some teachers -- falling through the gap where the adaptive approach is absent.",
+    "Students who struggle behaviourally receive very different responses depending on which classroom they are in -- supported by some, written off by others.",
+    "Students learn to code-switch -- hiding their struggles with some teachers while opening up to others. This is an exhausting way to spend a school day.",
+    "Students receive mixed messages about whether it is safe to take risks and make mistakes -- creating inconsistent permission to learn from failure.",
+  ][dimIdx];
+
+  html += '<div style="font-size:11px;color:#6366f1;border-top:1px solid #c7d2fe;padding-top:8px;margin-top:10px;font-style:italic;"><strong>Student impact:</strong> '+si+'</div>';
+  panel.innerHTML = html;
+}
+
+function renderQuadrant() {
+  if(teamQuadrantChart){teamQuadrantChart.destroy();teamQuadrantChart=null;}
+  const dimIdx = parseInt(document.getElementById('quadrantDimSelect').value);
+  const d = DIM_DEFS[dimIdx];
+  const myLabel = currentUser.role==='facilitator'?null:currentUser.label;
+  const isFacilitator = currentUser.role==='facilitator';
+  const allLabels = new Set([...Object.keys(BASELINE),...Object.keys(ENDLINE)]);
+
+  // Build stable jitter per label (so dots don't jump when switching views)
+  allLabels.forEach(label=>{
+    if(!quadrantJitter[label]) quadrantJitter[label]={x:(Math.random()-0.5)*0.14,y:(Math.random()-0.5)*0.14};
+  });
+
+  // Build point arrays
+  const ds = {
+    othersApr:[], othersNov:[], meApr:[], meNov:[],
+    othersAprLabels:[], othersNovLabels:[]
+  };
+
+  allLabels.forEach(label=>{
+    const j = quadrantJitter[label];
+    const isMe = label===myLabel;
+    const base = BASELINE[label], end = ENDLINE[label];
+    if(end) {
+      const pt={x:end[d.q1]+j.x, y:end[d.q2]+j.y};
+      if(isMe) ds.meApr.push(pt);
+      else { ds.othersApr.push(pt); ds.othersAprLabels.push(isFacilitator?'T-'+label:''); }
+    }
+    if(base) {
+      const pt={x:base[d.q1]+j.x, y:base[d.q2]+j.y};
+      if(isMe) ds.meNov.push(pt);
+      else { ds.othersNov.push(pt); ds.othersNovLabels.push(isFacilitator?'T-'+label:''); }
+    }
+  });
+
+  const v = quadrantView;
+
+  // Visibility per dataset based on view
+  // datasets: 0=othersApr, 1=othersNov, 2=meApr, 3=meNov
+  const vis = {
+    othersApr: v==='apr' || v==='me' || v==='all',
+    othersNov: v==='nov' || v==='all',
+    meApr:     v==='apr' || v==='me' || v==='all',
+    meNov:     v==='nov' || v==='me' || v==='all',
+  };
+
+  // Opacity: in 'me' view, others are muted; in 'all' view, others arrows are faint
+  const othersAprOpacity = (v==='me') ? 0.25 : 0.65;
+  const othersNovOpacity = (v==='all') ? 0.3 : 0.6;
+
+  teamQuadrantChart = new Chart(document.getElementById('teamQuadrant'), {
+    type:'scatter',
+    data:{datasets:[
+      // 0: Others April — solid indigo
+      { data: vis.othersApr ? ds.othersApr : [],
+        backgroundColor:'rgba(99,102,241,'+othersAprOpacity+')',
+        borderColor:'rgba(99,102,241,0.8)', borderWidth:1.5,
+        pointRadius:9, pointHoverRadius:11 },
+      // 1: Others November — hollow indigo
+      { data: vis.othersNov ? ds.othersNov : [],
+        backgroundColor:'rgba(255,255,255,0)',
+        borderColor:'rgba(99,102,241,'+othersNovOpacity+')', borderWidth:2,
+        pointRadius:9, pointHoverRadius:11 },
+      // 2: Me April — solid amber
+      { data: vis.meApr ? ds.meApr : [],
+        backgroundColor:'rgba(245,158,11,0.9)',
+        borderColor:'#d97706', borderWidth:2,
+        pointRadius:13, pointHoverRadius:15 },
+      // 3: Me November — hollow amber
+      { data: vis.meNov ? ds.meNov : [],
+        backgroundColor:'rgba(255,255,255,0)',
+        borderColor:'#d97706', borderWidth:2.5,
+        pointRadius:13, pointHoverRadius:15 },
+    ]},
+    options:{
+      animation: false,
+      responsive:true, maintainAspectRatio:false,
+      scales:{
+        x:{min:0.5, max:4.5, ticks:{stepSize:1,callback:v2=>SCALE_TEXT[v2]||''},
+          title:{display:true,text:'← '+d.trad+' (Q'+(d.q1+1)+')',font:{size:10},color:'#b45a1e'},
+          grid:{color:'#f3f4f6'}},
+        y:{min:0.5, max:4.5, ticks:{stepSize:1,callback:v2=>SCALE_TEXT[v2]||''},
+          title:{display:true,text:d.prog+' (Q'+(d.q2+1)+') →',font:{size:10},color:'#0f7370'},
+          grid:{color:'#f3f4f6'}}
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          const dsIdx=ctx.datasetIndex, ptIdx=ctx.dataIndex;
+          const period=[0,2].includes(dsIdx)?'April':'November';
+          const isMe=dsIdx>=2;
+          const facLabel=dsIdx===0?ds.othersAprLabels[ptIdx]:dsIdx===1?ds.othersNovLabels[ptIdx]:'';
+          const who=isFacilitator&&facLabel?facLabel:(isMe?'You':'A colleague')+' — '+period;
+          const rawX=Math.round(ctx.raw.x), rawY=Math.round(ctx.raw.y);
+          return [who, '  '+d.trad+': '+(SCALE_TEXT[rawX]||''), '  '+d.prog+': '+(SCALE_TEXT[rawY]||'')];
+        }}}
+      }
+    },
+    plugins:[{
+      id:'quadrantDecor',
+      beforeDraw(chart) {
+        const {ctx, scales:{x,y}, chartArea} = chart;
+        const mid = 2.5;
+        const mx = x.getPixelForValue(mid), my = y.getPixelForValue(mid);
+
+        // Subtle quadrant background fills
+        const fills = [
+          {x1:chartArea.left,y1:chartArea.top,x2:mx,y2:my, color:'rgba(15,115,110,0.04)'},    // top-left teal
+          {x1:mx,y1:chartArea.top,x2:chartArea.right,y2:my, color:'rgba(99,102,241,0.04)'},   // top-right indigo
+          {x1:chartArea.left,y1:my,x2:mx,y2:chartArea.bottom, color:'rgba(200,200,200,0.04)'},// bottom-left grey
+          {x1:mx,y1:my,x2:chartArea.right,y2:chartArea.bottom, color:'rgba(180,90,30,0.04)'},// bottom-right amber
+        ];
+        fills.forEach(f=>{
+          ctx.fillStyle=f.color;
+          ctx.fillRect(f.x1,f.y1,f.x2-f.x1,f.y2-f.y1);
+        });
+
+        // Crosshair lines
+        ctx.save();
+        ctx.setLineDash([4,4]);
+        ctx.strokeStyle='rgba(150,150,150,0.3)';
+        ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(mx,chartArea.top); ctx.lineTo(mx,chartArea.bottom); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(chartArea.left,my); ctx.lineTo(chartArea.right,my); ctx.stroke();
+        ctx.restore();
+
+        // Quadrant corner labels
+        ctx.font='10px sans-serif';
+        ctx.fillStyle='rgba(100,100,100,0.4)';
+        ctx.textAlign='left';  ctx.fillText('Progressive only',chartArea.left+6,chartArea.top+14);
+        ctx.textAlign='right'; ctx.fillText('Holds both',chartArea.right-6,chartArea.top+14);
+        ctx.textAlign='left';  ctx.fillText('Neither',chartArea.left+6,chartArea.bottom-6);
+        ctx.textAlign='right'; ctx.fillText('Traditional only',chartArea.right-6,chartArea.bottom-6);
+      },
+      afterDraw(chart) {
+        const {ctx, scales:{x,y}} = chart;
+
+        // Draw movement arrows (me view: only my arrow; all view: all arrows faint)
+        allLabels.forEach(label=>{
+          const isMe=label===myLabel;
+          const showArrow=(v==='me'&&isMe)||(v==='all');
+          if(!showArrow) return;
+          const base=BASELINE[label], end=ENDLINE[label];
+          if(!base||!end) return;
+          const j=quadrantJitter[label];
+          const bx=x.getPixelForValue(base[d.q1]+j.x), by=y.getPixelForValue(base[d.q2]+j.y);
+          const ex=x.getPixelForValue(end[d.q1]+j.x),  ey=y.getPixelForValue(end[d.q2]+j.y);
+          const dist=Math.sqrt((ex-bx)**2+(ey-by)**2);
+          if(dist<4) return;
+
+          ctx.save();
+          ctx.setLineDash([4,3]);
+          ctx.strokeStyle=isMe?'rgba(217,119,6,0.7)':'rgba(99,102,241,0.2)';
+          ctx.lineWidth=isMe?2.5:1.5;
+          ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(ex,ey); ctx.stroke();
+          // Arrowhead
+          const ang=Math.atan2(ey-by,ex-bx), al=7;
+          ctx.setLineDash([]);
+          ctx.strokeStyle=isMe?'#d97706':'rgba(99,102,241,0.3)';
+          ctx.lineWidth=isMe?2:1.5;
+          ctx.beginPath();
+          ctx.moveTo(ex,ey); ctx.lineTo(ex-al*Math.cos(ang-0.4),ey-al*Math.sin(ang-0.4));
+          ctx.moveTo(ex,ey); ctx.lineTo(ex-al*Math.cos(ang+0.4),ey-al*Math.sin(ang+0.4));
+          ctx.stroke();
+          ctx.restore();
+        });
+
+        // "You" label
+        const meDs=chart.getDatasetMeta(2);
+        const meNovDs=chart.getDatasetMeta(3);
+        const mePt=(meDs.data[0]&&vis.meApr)?meDs.data[0]:(meNovDs.data[0]&&vis.meNov?meNovDs.data[0]:null);
+        if(mePt){
+          ctx.fillStyle='#92400e'; ctx.font='bold 10px sans-serif';
+          ctx.textAlign='center'; ctx.fillText('You',mePt.x,mePt.y-17);
+        }
+
+        // Facilitator labels
+        if(isFacilitator) {
+          if(vis.othersApr) chart.getDatasetMeta(0).data.forEach((pt,i)=>{
+            if(!ds.othersAprLabels[i]) return;
+            ctx.fillStyle='#4338ca'; ctx.font='bold 8px sans-serif';
+            ctx.textAlign='center'; ctx.fillText(ds.othersAprLabels[i],pt.x,pt.y-13);
+          });
+        }
+      }
+    }]
+  });
+
+  // Update legend
+  const legends = {
+    apr:  '<span class="flex items-center gap-2"><span style="width:11px;height:11px;border-radius:50%;background:rgba(99,102,241,0.65);display:inline-block;"></span>Colleagues (April)</span><span class="flex items-center gap-2"><span style="width:13px;height:13px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>You (April)</span>',
+    nov:  '<span class="flex items-center gap-2"><span style="width:11px;height:11px;border-radius:50%;border:2px solid rgba(99,102,241,0.6);background:white;display:inline-block;"></span>Colleagues (November)</span><span class="flex items-center gap-2"><span style="width:13px;height:13px;border-radius:50%;border:2.5px solid #d97706;background:white;display:inline-block;"></span>You (November)</span>',
+    me:   '<span class="flex items-center gap-2"><span style="width:11px;height:11px;border-radius:50%;background:rgba(99,102,241,0.25);display:inline-block;"></span>Colleagues (April, muted)</span><span class="flex items-center gap-2"><span style="width:13px;height:13px;border-radius:50%;border:2.5px solid #d97706;background:white;display:inline-block;"></span>You (Nov)</span><span class="flex items-center gap-2"><span style="width:13px;height:13px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>You (Apr)</span><span class="italic">Dashed arrow = your journey</span>',
+    all:  '<span class="flex items-center gap-2"><span style="width:11px;height:11px;border-radius:50%;border:2px solid rgba(99,102,241,0.3);background:white;display:inline-block;"></span>Nov (hollow)</span><span class="flex items-center gap-2"><span style="width:11px;height:11px;border-radius:50%;background:rgba(99,102,241,0.65);display:inline-block;"></span>Apr (solid)</span><span class="flex items-center gap-2"><span style="width:13px;height:13px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>You</span><span class="italic">Faint arrows = all journeys · Bold arrow = yours</span>',
+  };
+  document.getElementById('quadrantLegend').innerHTML = legends[v] || '';
+
+  // Update interpretive panel
+  interpretQuadrant(dimIdx, myLabel, isFacilitator);
+}
+
+// ── Heatmap ──────────────────────────────────────────────────────────
+function setHmView(v){
+  hmView=v;
+  document.querySelectorAll('.hm-tab').forEach(b=>{
+    const on=b.id==='hm-'+v;
+    b.className='hm-tab px-3 py-1.5 rounded-full text-xs font-semibold border-2 '+(on?'border-indigo-400 bg-indigo-600 text-white':'border-indigo-200 bg-white text-indigo-700');
+  });
+  renderHeatmap();
+}
+
+function renderHeatmap(){
+  const data = hmView==='baseline'?BASELINE:ENDLINE;
+  const myLabel = currentUser.role==='facilitator'?null:currentUser.label;
+  const isFacilitator = currentUser.role==='facilitator';
+  const qLabels=['Social\ndistance','Openness\nneeded','Behave\n→learn','Emotions\nout','Avoid\nmistakes','Teacher\n=friend','Create\nopenness','Understand\nstruggles','Classroom\nsocial','Safe\nto err'];
+  const nameW='72px';
+  const colDef=nameW+' repeat(10,minmax(0,1fr))';
+
+  let html=`<div style="min-width:680px;"><div style="display:grid;grid-template-columns:${colDef};gap:3px;margin-bottom:3px;"><div></div>`;
+  qLabels.forEach((l,i)=>{
+    const col=i<5?'#6366f1':'#7c3aed';
+    html+=`<div style="font-size:9px;font-weight:600;color:${col};text-align:center;padding:2px 1px;line-height:1.2;white-space:pre-line;">${l}</div>`;
+  });
+  html+='</div>';
+
+  // Divider labels
+  html+=`<div style="display:grid;grid-template-columns:${colDef};gap:3px;margin-bottom:4px;"><div></div>
+    <div style="grid-column:2/7;text-align:center;font-size:9px;font-weight:700;color:#6366f1;border-bottom:2px solid #e0e7ff;padding-bottom:2px;">← Traditional (Q1–Q5)</div>
+    <div style="grid-column:7/12;text-align:center;font-size:9px;font-weight:700;color:#7c3aed;border-bottom:2px solid #ede9fe;padding-bottom:2px;">Progressive (Q6–Q10) →</div>
+  </div>`;
+
+  const labels=Object.keys(data).sort();
+  labels.forEach(label=>{
+    const row=data[label];
+    const isMe=label===myLabel;
+    const displayLabel=isMe?'You':(isFacilitator?'T-'+label:'—');
+    const labelStyle=isMe?'background:#fef3c7;color:#92400e;font-weight:700;':'background:#f3f4f6;color:#9ca3af;';
+    const rowOutline=isMe?'outline:2px solid #f59e0b;outline-offset:1px;border-radius:4px;':'';
+
+    html+=`<div style="display:grid;grid-template-columns:${colDef};gap:3px;margin-bottom:3px;${rowOutline}">`;
+    html+=`<div style="display:flex;align-items:center;justify-content:center;font-size:10px;border-radius:4px;padding:8px 2px;${labelStyle}">${displayLabel}</div>`;
+    row.forEach(val=>{
+      const c=gradColor(val,1,4);
+      html+=`<div style="border-radius:4px;padding:8px 2px;background:${c.bg};"></div>`;
+    });
+    html+='</div>';
+  });
+
+  // "Not in this survey" rows
+  const allLabels=new Set([...Object.keys(BASELINE),...Object.keys(ENDLINE)]);
+  allLabels.forEach(label=>{
+    if(data[label]) return;
+    const isMe=label===myLabel;
+    if(!isMe && !isFacilitator) return; // hide non-me absent rows for teachers
+    const displayLabel=isMe?'You':(isFacilitator?'T-'+label:'—');
+    html+=`<div style="display:grid;grid-template-columns:${colDef};gap:3px;margin-bottom:3px;">`;
+    html+=`<div style="display:flex;align-items:center;justify-content:center;font-size:10px;border-radius:4px;padding:8px 2px;background:#f9fafb;color:#d1d5db;">${displayLabel}</div>`;
+    for(let i=0;i<10;i++) html+=`<div style="border-radius:4px;padding:8px 2px;background:#f9fafb;display:flex;align-items:center;justify-content:center;"><span style="font-size:9px;color:#d1d5db;">n/a</span></div>`;
+    html+='</div>';
+  });
+
+  html+=`<div style="display:flex;justify-content:space-between;margin-top:6px;">
+    <span style="font-size:10px;color:#b45a1e;font-weight:600;">■ Not true</span>
+    <span style="font-size:10px;color:#0f7370;font-weight:600;">■ Very true</span>
+  </div>
+  <div style="margin-top:6px;font-size:10px;color:#9ca3af;font-style:italic;">n/a = did not complete this survey round</div>
+  </div>`;
+
+  document.getElementById('teamHeatmap').innerHTML=html;
+}
+
+// -- Heatmap reflection panel
+// ── Scenario data ────────────────────────────────────────────────────
+var SCEN_BASE = {
+  A:['C','D','C','B','C'], B:['C','D','C','B','D'], C:['C','D','B','B','C'],
+  D:['C','D','C','D','C'], E:['C','D','C','B','C'], F:['D','D','C','C','C'],
+  G:['D','D','C','C','D'], H:['C','D','D','B','C'],
+  I:['C','D','A','B','C'], J:['C','D','C','B','C'], K:['D','D','D','C','C'],
+};
+var SCEN_END = {
+  A:['C','D','C','B','C'], B:['C','D','C','D','D'], C:['D','C','B','B','C'],
+  D:['B','D','C','D','C'], H:['C','C','C','B','C'],
+  I:['C','D','A','B','C'], J:['C','C','D','B','C'],
+  K:['C','D','C','B','C'], L:['C','D','C','D','C'],
+};
+var SCEN_TITLES = [
+  'A 10th grade student has a history of high absences and low grades. The teacher wants to promote motivation.',
+  'A 9th grade student misses three assignments and avoids eye contact when the teacher approaches.',
+  'During a lesson the teacher makes a sarcastic comment about an inattentive student and others laugh.',
+  'A student rolls their eyes and mutters something disrespectful. The teacher feels angry.',
+  'Just before the lesson two students argue, and one immediately comes to the teacher with a complaint.',
+];
+var SCEN_QS = [
+  'Which demonstrates a strength-based approach in a conversation with this student?',
+  'Which teacher response best demonstrates a foundational, relationship-building skill?',
+  'Which teacher action can be most effective for repairing this relational damage?',
+  'What could be the teacher\'s best response in this situation?',
+  'How can a teacher best respond to this situation?',
+];
+var SCEN_OPTS = [
+  {
+    B: 'The teacher says: “Absence from class in 10th grade will affect your future. So that needs to change if you want to improve your grades. I will help you get better grades if you promise to not be absent.”',
+    C: 'The teacher says: “Despite high absences, you have managed to pass your previous classes. I assume you are a quick learner and wonder how much more you could achieve if you can attend all classes. Do you think you will be able to attend all classes in 10th grade? What will help you?”',
+    D: 'The teacher says: “10th grade is a tough class. You will need to ensure that you are not absent. And if you become absent, make sure you connect with peers for notes. But remember, attending classes is very important for your success.”',
+  },
+  {
+    C: 'Tell the student: “I’ll accept the late assignment this time, but you’ll get a 50% deduction for each one.”',
+    D: 'Tell the student: “It looks like you’re having a tough time. I want to understand what’s going on before we talk about the assignments.”',
+  },
+  {
+    A: 'Instructing the student about the importance of paying attention in class.',
+    B: 'Telling the class to stop laughing and take it seriously.',
+    C: 'Meeting the student personally to offer a genuine apology and ask the reason for not paying attention.',
+    D: 'Apologising to the student immediately in class and requesting them to pay attention.',
+  },
+  {
+    B: 'Pause briefly, take a deep breath, and refocus on the lesson while showing disagreement about the behaviour through non-verbal gestures.',
+    C: 'Ignore the incident to focus on the lesson. There is no point escalating the situation and wasting classroom time on such behaviour.',
+    D: 'Ask the student to leave the class for their disrespectful behaviour so the lesson can continue and other students understand that such behaviour is not tolerable.',
+  },
+  {
+    C: 'The teacher calmly pulls both students aside and says: “I see that someone’s feelings were hurt. Let’s find a quiet place after the lesson to talk about what happened. We cannot waste classroom time now but we must address this once we finish our lesson.”',
+    D: 'The teacher calls a third student who saw the interaction to explain who was right and who was wrong — to verify who is telling the truth about the argument.',
+  },
+];
+var SCEN_Q = [
+  'Most of the team chose the same option in November but the spread widened in April. What might have changed in how teachers think about strength-based conversations with struggling students?',
+  'The team was almost unanimous on this in November. In April a few responses shifted. What does relationship-building look like when a student is already withdrawing — and do you think there is one right answer?',
+  'The team became more aligned on this in April. What does it mean to repair a relationship that was damaged in public? What makes some approaches more effective than others in the classroom context?',
+  'This is the scenario where the team diverged most in April. Responses ranged from ignoring the behaviour to removing the student. What does your own reaction in a moment of anger tell you about your instincts as a teacher?',
+  'The team was broadly aligned on this across both timepoints. What is it about this scenario that makes the response feel clearer — and what does that tell you about where your team shares a common instinct?',
+];
+function renderScenarios() {
+  var panel = document.getElementById('scenPanel');
+  if(!panel) return;
+  var isFacilitator = currentUser && currentUser.role === 'facilitator';
+  var myLabel = currentUser ? currentUser.label : null;
+  var opts = ['A','B','C','D'];
+  var optColors = {A:'#6366f1', B:'#0f7370', C:'#b45a1e', D:'#7c3aed'};
+
+  function makeBar(dataset, si, myChoice, label) {
+    var counts = {A:0,B:0,C:0,D:0};
+    var total = 0;
+    Object.keys(dataset).forEach(function(l){
+      if(dataset[l]){ counts[dataset[l][si]]++; total++; }
+    });
+    if(total === 0) return '';
+    var html = '<div style="margin-bottom:6px;">';
+    html += '<div style="font-size:10px;font-weight:600;color:#9ca3af;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em;">'
+      +label+' &mdash; '+total+' response'+(total>1?'s':'')+'</div>';
+    // Bar track
+    html += '<div style="height:28px;background:#f3f4f6;border-radius:14px;overflow:hidden;display:flex;margin-bottom:4px;">';
+    opts.forEach(function(opt){
+      if(!counts[opt]) return;
+      var pct = (counts[opt]/total)*100;
+      var isMe = opt === myChoice;
+      html += '<div style="width:'+pct+'%;background:'+(isMe?'#f59e0b':optColors[opt])+';'
+        +'opacity:'+(isMe?'1':'0.55')+';position:relative;transition:width 0.3s;" '
+        +'title="Option '+opt+': '+counts[opt]+' teacher'+(counts[opt]>1?'s':'')+(isMe?' \u2014 you':'')+'">'
+        // letter label inside if wide enough
+        +(pct>12?'<span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;font-weight:800;color:white;pointer-events:none;">'+opt+'</span>':'')
+        +'</div>';
+    });
+    html += '</div>';
+    // Legend chips
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+    opts.forEach(function(opt){
+      if(!counts[opt]) return;
+      var isMe = opt === myChoice;
+      html += '<span style="font-size:10px;display:inline-flex;align-items:center;gap:3px;'
+        +'background:'+(isMe?'#fef3c7':'#f3f4f6')+';padding:2px 6px;border-radius:12px;'
+        +'color:'+(isMe?'#92400e':'#6b7280')+';font-weight:'+(isMe?'700':'400')+';white-space:nowrap;">'
+        +'<span style="width:8px;height:8px;border-radius:2px;background:'+(isMe?'#f59e0b':optColors[opt])+';display:inline-block;flex-shrink:0;"></span>'
+        +'Option '+opt+': '+counts[opt]+(isMe?' (you)':'')
+        +'</span>';
+    });
+    if(isFacilitator){
+      var missing = ['A','B','C','D','E','F','G','H','I','J','K','L'].filter(function(l){return !dataset[l];});
+      if(missing.length) html += '<span style="font-size:10px;color:#e5e7eb;">No data: '+missing.map(function(l){return 'T-'+l;}).join(', ')+'</span>';
+    }
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  var html = '';
+  for(var si=0; si<5; si++) {
+    var myNov = SCEN_BASE[myLabel] ? SCEN_BASE[myLabel][si] : null;
+    var myApr = SCEN_END[myLabel]  ? SCEN_END[myLabel][si]  : null;
+    var iChanged = !!(myNov && myApr && myNov !== myApr);
+    var scenOpts = SCEN_OPTS[si] || {};
+    var cardId = 'scen-card-'+si;
+    var optsId = 'scen-opts-'+si;
+
+    html += '<div id="'+cardId+'" style="background:white;border-radius:20px;'
+      +'box-shadow:0 2px 16px rgba(0,0,0,0.07);padding:16px;margin-bottom:16px;">';
+
+    // ── Header ──────────────────────────────────────────────────────
+    html += '<div style="font-size:10px;font-weight:700;color:#6366f1;text-transform:uppercase;'
+      +'letter-spacing:0.07em;margin-bottom:5px;">Scenario '+(si+1)+' of 5</div>';
+    html += '<p style="font-size:13px;font-weight:700;color:#111827;margin:0 0 3px;line-height:1.4;">'
+      +SCEN_TITLES[si]+'</p>';
+    html += '<p style="font-size:11px;color:#9ca3af;margin:0 0 12px;font-style:italic;">'
+      +SCEN_QS[si]+'</p>';
+
+    // ── My choice summary (if data exists) ───────────────────────────
+    if(myNov || myApr) {
+      html += '<div style="background:#fef9f0;border:1px solid #fde68a;border-radius:10px;'
+        +'padding:8px 10px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;">';
+      html += '<div style="flex-shrink:0;">';
+      if(myNov && myApr && !iChanged) {
+        html += '<div style="width:26px;height:26px;border-radius:7px;background:#f59e0b;'
+          +'display:flex;align-items:center;justify-content:center;">'
+          +'<span style="font-size:11px;font-weight:800;color:white;">'+myNov+'</span></div>';
+      } else if(myNov && myApr && iChanged) {
+        html += '<div style="display:flex;align-items:center;gap:4px;">'
+          +'<div style="width:24px;height:24px;border-radius:6px;background:#d1d5db;'
+          +'display:flex;align-items:center;justify-content:center;">'
+          +'<span style="font-size:10px;font-weight:800;color:#6b7280;">'+myNov+'</span></div>'
+          +'<span style="font-size:11px;color:#9ca3af;">&rarr;</span>'
+          +'<div style="width:24px;height:24px;border-radius:6px;background:#f59e0b;'
+          +'display:flex;align-items:center;justify-content:center;">'
+          +'<span style="font-size:10px;font-weight:800;color:white;">'+myApr+'</span></div>'
+          +'</div>';
+      } else if(myNov && !myApr) {
+        html += '<div style="width:26px;height:26px;border-radius:7px;background:#f59e0b;'
+          +'display:flex;align-items:center;justify-content:center;">'
+          +'<span style="font-size:11px;font-weight:800;color:white;">'+myNov+'</span></div>';
+      } else if(!myNov && myApr) {
+        html += '<div style="width:26px;height:26px;border-radius:7px;background:#f59e0b;'
+          +'display:flex;align-items:center;justify-content:center;">'
+          +'<span style="font-size:11px;font-weight:800;color:white;">'+myApr+'</span></div>';
+      }
+      html += '</div>';
+      html += '<div style="flex:1;min-width:0;">';
+      html += '<div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:1px;">Your choice</div>';
+      if(!myNov) {
+        html += '<div style="font-size:11px;color:#6b7280;">Option '+myApr+' in April (no November data)</div>';
+      } else if(!myApr) {
+        html += '<div style="font-size:11px;color:#6b7280;">Option '+myNov+' in November (no April data)</div>';
+      } else if(iChanged) {
+        html += '<div style="font-size:11px;color:#6b7280;">Changed from Option '+myNov+' (November) to Option '+myApr+' (April)</div>';
+      } else {
+        html += '<div style="font-size:11px;color:#6b7280;">Option '+myNov+' in both surveys</div>';
+      }
+      html += '</div></div>';
+    }
+
+    // ── Team distribution bars (Nov + Apr stacked) ───────────────────
+    var novBar = makeBar(SCEN_BASE, si, myNov, 'November');
+    var aprBar = makeBar(SCEN_END,  si, myApr, 'April');
+    if(novBar || aprBar) {
+      html += '<div style="background:#f9fafb;border-radius:10px;padding:10px;margin-bottom:12px;">';
+      if(novBar) html += novBar;
+      if(aprBar) {
+        if(novBar) html += '<div style="height:1px;background:#e5e7eb;margin:8px 0;"></div>';
+        html += aprBar;
+      }
+      html += '</div>';
+    }
+
+    // ── Collapsible options ──────────────────────────────────────────
+    html += '<button onclick="toggleScenOpts('+si+')" style="width:100%;text-align:left;'
+      +'background:#f5f3ff;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;'
+      +'display:flex;align-items:center;justify-content:between;gap:6px;margin-bottom:0;" '
+      +'id="scen-opts-btn-'+si+'">'
+      +'<span style="font-size:11px;font-weight:600;color:#6d28d9;flex:1;">See all response options</span>'
+      +'<svg id="scen-opts-chev-'+si+'" style="width:16px;height:16px;color:#8b5cf6;transition:transform 0.2s;flex-shrink:0;" '
+      +'fill="none" stroke="currentColor" viewBox="0 0 24 24">'
+      +'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>'
+      +'</button>';
+
+    html += '<div id="'+optsId+'" style="display:none;margin-top:8px;">';
+    opts.forEach(function(opt){
+      var text = scenOpts[opt];
+      if(!text) return;
+      var isMyNov = opt === myNov;
+      var isMyApr = opt === myApr && myApr !== myNov;
+      var isEither = opt === myNov || opt === myApr;
+      var bg     = isEither ? '#fef3c7' : '#f9fafb';
+      var border = isEither ? '#fde68a' : '#e5e7eb';
+      html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px;'
+        +'border-radius:8px;margin-bottom:6px;background:'+bg+';border:1.5px solid '+border+';">'
+        +'<div style="width:22px;height:22px;border-radius:6px;flex-shrink:0;'
+        +'background:'+(isEither?'#f59e0b':optColors[opt]||'#9ca3af')+';'
+        +'display:flex;align-items:center;justify-content:center;">'
+        +'<span style="font-size:10px;font-weight:800;color:white;">'+opt+'</span></div>'
+        +'<div style="flex:1;min-width:0;">'
+        +'<p style="font-size:11px;color:#374151;line-height:1.55;margin:0 0 3px;">'+text+'</p>'
+        +(isMyNov && isMyApr ? '<p style="font-size:10px;font-weight:700;color:#92400e;margin:0;">Your choice in both surveys</p>'
+          : isMyNov && !isMyApr && myApr ? '<p style="font-size:10px;font-weight:700;color:#92400e;margin:0;">Your choice in November</p>'
+          : isMyApr && !isMyNov && myNov ? '<p style="font-size:10px;font-weight:700;color:#92400e;margin:0;">Your choice in April</p>'
+          : isMyNov || isMyApr ? '<p style="font-size:10px;font-weight:700;color:#92400e;margin:0;">Your choice</p>'
+          : '')
+        +'</div></div>';
+    });
+    html += '</div>'; // close opts panel
+
+    // ── Discussion prompt ────────────────────────────────────────────
+    html += '<div style="background:#f5f3ff;border-left:3px solid #8b5cf6;padding:8px 10px;'
+      +'border-radius:0 8px 8px 0;margin-top:10px;">'
+      +'<p style="font-size:11px;color:#4c1d95;line-height:1.6;margin:0;">'+SCEN_Q[si]+'</p>'
+      +'</div>';
+
+    html += '</div>'; // close card
+  }
+
+  html += '<p style="font-size:11px;color:#9ca3af;font-style:italic;text-align:center;padding:0 8px 8px;">'
+    +'No response is labelled right or wrong. The point is to understand why your team landed differently &mdash; '
+    +'and what that reveals about your collective instincts in difficult moments.</p>';
+
+  panel.innerHTML = html;
+}
+
+
+function renderLeaderCard() {
+  var panel = document.getElementById('leaderGuidancePanel');
+  if(!panel) return;
+
+  var allLabels = Array.from(new Set(Object.keys(BASELINE).concat(Object.keys(ENDLINE))));
+
+  // ── Compute overall progressive score per teacher (use April if available) ──
+  function teacherScore(lbl) {
+    var d = ENDLINE[lbl] || BASELINE[lbl];
+    if(!d) return null;
+    var total = 0;
+    DIM_DEFS.forEach(function(dim){ total += (d[dim.q2]-d[dim.q1])+3; });
+    return total / DIM_DEFS.length;
+  }
+
+  // ── Classify into three orientations ────────────────────────────────
+  var structure=[],bridge=[],relationship=[];
+  allLabels.sort().forEach(function(l){
+    var s = teacherScore(l);
+    if(s===null) return;
+    if(s < 2.8)       structure.push(l);
+    else if(s <= 3.8) bridge.push(l);
+    else              relationship.push(l);
+  });
+
+  // ── Compute dimension spread in April ───────────────────────────────
+  function dimSpread(d) {
+    var vals = Object.keys(ENDLINE).map(function(l){ return ENDLINE[l][d.q2]-ENDLINE[l][d.q1]; });
+    if(!vals.length) return 0;
+    var m = vals.reduce(function(a,b){return a+b;},0)/vals.length;
+    return Math.sqrt(vals.reduce(function(s,v){return s+(v-m)*(v-m);},0)/vals.length);
+  }
+  var dimsSorted = DIM_DEFS.slice().sort(function(a,b){ return dimSpread(b)-dimSpread(a); });
+  var topFriction  = dimsSorted[0];
+  var topFriction2 = dimsSorted[1];
+
+  // ── Group card builder ───────────────────────────────────────────────
+  function groupCard(title, members, bg, border, textColor, dotColor) {
+    var inner = '';
+    if(members.length === 0) {
+      inner = '<p style="font-size:11px;color:#9ca3af;font-style:italic;">No teachers in this group.</p>';
+    } else if(members.length < 3) {
+      inner = '<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;">'
+        +'<p style="font-size:11px;color:#92400e;">&#9651; '+members.length+' teacher &mdash; group too small to show individually</p>'
+        +'</div>';
+    } else {
+      inner = '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+        +members.map(function(l){
+          return '<span style="font-size:11px;font-weight:600;color:'+textColor+';background:white;'
+            +'border:1px solid '+border+';border-radius:8px;padding:3px 10px;">Teacher '+l+'</span>';
+        }).join('')
+        +'</div>';
+    }
+    return '<div style="border:2px solid '+border+';border-radius:14px;background:'+bg+';padding:14px;flex:1;min-width:0;">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">'
+      +'<span style="width:10px;height:10px;border-radius:2px;background:'+dotColor+';display:inline-block;flex-shrink:0;"></span>'
+      +'<span style="font-size:12px;font-weight:700;color:'+textColor+';">'+title+' ('+members.length+')</span>'
+      +'</div>'
+      +inner
+      +'</div>';
+  }
+
+  // ── Friction language ────────────────────────────────────────────────
+  var frictionExamples = {
+    'Distance vs Friendship': {
+      tension: 'Some teachers prioritise professional distance to maintain authority, while others believe being like a friend to students is what builds trust and engagement.',
+      impact:  'In school initiatives around student wellbeing or pastoral care, these teachers may have fundamentally different ideas about what a supportive teacher-student relationship should look like — and both are sincere.',
+      meeting: 'When we talk about supporting struggling students, what does the relationship between a teacher and a student actually need to look like — and how consistent should that be across our school?',
+    },
+    'Fixed vs Adaptive': {
+      tension: 'Some teachers expect students to take initiative in opening up, while others believe it is the teacher\'s responsibility to actively create the conditions for each student to engage.',
+      impact:  'In collaborative planning sessions, teachers may disagree about how much differentiation is reasonable — with some seeing it as necessary inclusion and others as lowering expectations.',
+      meeting: 'How much responsibility does a teacher carry for drawing a student out — and how do we as a team decide what is fair to expect of ourselves?',
+    },
+    'Academic vs Holistic': {
+      tension: 'Some teachers believe emotional and social issues belong outside the classroom to protect academic time, while others see the classroom as a space that must hold the whole child.',
+      impact:  'When designing school policies on student wellbeing, mental health, or pastoral time, these different assumptions can create friction about what belongs in a teacher\'s role.',
+      meeting: 'Where does a teacher\'s responsibility end and a counsellor\'s begin — and does our school have a shared answer to that question?',
+    },
+    'Discipline vs Relationship': {
+      tension: 'Some teachers believe behaviour must come before learning, while others believe understanding a student\'s emotional state is what makes behaviour and learning possible.',
+      impact:  'In behaviour management policy discussions, these teachers may have genuinely different frameworks — leading to inconsistent responses to the same student behaviour across classrooms.',
+      meeting: 'When a student is repeatedly disruptive, what does our team believe is the right first step — and is that belief shared across classrooms?',
+    },
+    'Perfect vs Growth': {
+      tension: 'Some teachers believe showing mistakes undermines their authority, while others actively model learning and error as part of their classroom culture.',
+      impact:  'In professional development settings, these teachers may have different comfort levels with vulnerability and experimentation — affecting how openly they engage with new practices.',
+      meeting: 'What does it mean for our school to be a place where adults also learn publicly — and what would it take for teachers to feel safe doing that?',
+    },
+  };
+
+  var f1 = frictionExamples[topFriction.name]  || {};
+  var f2 = frictionExamples[topFriction2.name] || {};
+
+  // ── Strategic pairing logic ──────────────────────────────────────────
+  // Find cross-group pairing examples
+  var pairEx = '';
+  if(structure.length > 0 && relationship.length > 0) {
+    pairEx = 'pairing a Structure-Centred teacher with a Relationship-Centred colleague on a joint initiative could surface different assumptions productively — with structured facilitation to guide the dialogue.';
+  } else if(structure.length > 0 && bridge.length > 0) {
+    pairEx = 'pairing a Structure-Centred teacher with a Bridge-Building colleague could create productive tension with manageable distance between positions.';
+  } else if(bridge.length > 0 && relationship.length > 0) {
+    pairEx = 'pairing Bridge-Building and Relationship-Centred teachers could support smoother co-implementation while still bringing some diversity of approach.';
+  } else {
+    pairEx = 'pairing teachers from different orientation groups could create productive learning while being mindful of the distance between their positions.';
+  }
+
+  // ── Build HTML ───────────────────────────────────────────────────────
+  var html = '';
+
+  // Header
+  html += '<div style="font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;'
+    +'letter-spacing:0.07em;margin-bottom:4px;">For school leaders</div>';
+  html += '<h2 style="font-size:16px;font-weight:800;color:#1f2937;margin:0 0 4px;">Using this data to lead your team</h2>';
+  html += '<p style="font-size:12px;color:#6b7280;margin:0 0 16px;line-height:1.5;">'
+    +'This view does not identify individual teachers. Use the patterns below to make structural decisions '
+    +'that help your whole team work more coherently for students.</p>';
+
+  // ── SECTION 1: Groupings ─────────────────────────────────────────────
+  html += '<div style="margin-bottom:20px;">';
+  html += '<div style="font-size:12px;font-weight:700;color:#1f2937;margin-bottom:3px;">Teacher groupings by current orientation</div>';
+  html += '<p style="font-size:11px;color:#6b7280;margin:0 0 10px;line-height:1.5;">'
+    +'How your team is currently distributed across three orientations &mdash; useful for designing PD pairings '
+    +'and collaborative activities. Groups with fewer than 3 teachers do not show individual labels to protect privacy.</p>';
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">'
+    +groupCard('Structure-Centred',   structure,    '#fff0f0','#fca5a5','#991b1b','#ef4444')
+    +groupCard('Bridge-Building',     bridge,       '#fffbeb','#fcd34d','#92400e','#f59e0b')
+    +groupCard('Relationship-Centred',relationship, '#f0fdf4','#86efac','#14532d','#22c55e')
+    +'</div>';
+
+  // Friction + pairing insight box
+  html += '<div style="background:#4338ca;border-radius:12px;padding:14px 16px;">';
+  html += '<div style="font-size:12px;font-weight:700;color:white;margin-bottom:8px;">&#128161; Understanding potential friction points</div>';
+  html += '<p style="font-size:11px;color:#c7d2fe;line-height:1.6;margin-bottom:8px;">'
+    +'<strong style="color:white;">Why this matters:</strong> When teachers with different orientations collaborate on school initiatives, '
+    +'friction can arise from fundamentally different — but equally legitimate — assumptions about what effective teaching looks like. '
+    +'Understanding these differences is not about assigning fault; it is about designing smarter collaboration.</p>';
+  html += '<p style="font-size:11px;color:#c7d2fe;line-height:1.6;margin-bottom:8px;">'
+    +'<strong style="color:white;">Example:</strong> A Relationship-Centred teacher might advocate for more emotional check-ins before lessons, '
+    +'while a Structure-Centred colleague sees this as time taken away from academic learning. Both views are valid. '
+    +'Without naming the difference, collaborative PD initiatives can stall silently.</p>';
+  html += '<p style="font-size:11px;color:#c7d2fe;line-height:1.6;">'
+    +'<strong style="color:white;">Strategic pairing:</strong> Use this data to either (1) pair teachers with similar orientations for smoother '
+    +'co-implementation of new initiatives, or (2) '+pairEx+'</p>';
+  html += '</div>';
+  html += '</div>';
+
+  // ── SECTION 2: Friction points ───────────────────────────────────────
+  html += '<div style="margin-bottom:20px;">';
+  html += '<div style="font-size:12px;font-weight:700;color:#1f2937;margin-bottom:3px;">Where your team is most divided</div>';
+  html += '<p style="font-size:11px;color:#6b7280;margin:0 0 10px;line-height:1.5;">'
+    +'These are the dimensions where your teachers hold the most varied positions. This is where structural decisions — '
+    +'time, groupings, policy, dialogue — can make the most difference.</p>';
+
+  [{ d: topFriction, f: f1, rank: 1 }, { d: topFriction2, f: f2, rank: 2 }].forEach(function(item){
+    html += '<div style="border:1px solid #e0e7ff;border-radius:12px;overflow:hidden;margin-bottom:10px;">';
+    html += '<div style="background:#f5f7ff;padding:10px 14px;border-bottom:1px solid #e0e7ff;">';
+    html += '<span style="font-size:10px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:0.05em;">Friction point '+item.rank+'</span>';
+    html += '<div style="font-size:13px;font-weight:700;color:#1f2937;margin-top:2px;">'+item.d.name+'</div>';
+    html += '</div>';
+    html += '<div style="padding:12px 14px;">';
+    if(item.f.tension) {
+      html += '<p style="font-size:11px;color:#374151;line-height:1.6;margin-bottom:8px;">'
+        +'<strong>What the divide looks like:</strong> '+item.f.tension+'</p>';
+    }
+    if(item.f.impact) {
+      html += '<p style="font-size:11px;color:#374151;line-height:1.6;margin-bottom:8px;">'
+        +'<strong>Where this surfaces:</strong> '+item.f.impact+'</p>';
+    }
+    if(item.f.meeting) {
+      html += '<div style="background:#faf5ff;border-left:3px solid #8b5cf6;padding:8px 10px;border-radius:0 8px 8px 0;">'
+        +'<p style="font-size:11px;font-weight:600;color:#6d28d9;margin-bottom:2px;">Question to bring to your next staff meeting</p>'
+        +'<p style="font-size:11px;color:#4c1d95;line-height:1.6;margin:0;">'+item.f.meeting+'</p>'
+        +'</div>';
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  // ── SECTION 3: Leader actions ────────────────────────────────────────
+  html += '<div style="margin-bottom:8px;">';
+  html += '<div style="font-size:12px;font-weight:700;color:#1f2937;margin-bottom:10px;">Decisions this data can inform</div>';
+
+  var actions = [
+    { icon:'&#128203;', title:'Prioritise professional development',
+      text:'The dimensions with the highest spread across your team are where a shared professional learning conversation is most needed &mdash; not to align everyone, but to surface the differences and let the team talk about them intentionally.' },
+    { icon:'&#128101;', title:'Design teaching teams and timetables intentionally',
+      text:'When assigning homerooms, co-teaching pairs, or grade-level teams, use orientation groupings to decide whether you want complementary diversity or aligned consistency &mdash; both are valid for different purposes.' },
+    { icon:'&#127881;', title:'Celebrate collective strengths publicly',
+      text:'Where the team is already well-aligned in progressive dispositions, name it in staff meetings. Teams need to know what they are already doing well together &mdash; not just where they need to improve.' },
+    { icon:'&#128172;', title:'Ask better questions &mdash; not just make announcements',
+      text:'Instead of announcing a new behaviour policy or wellbeing initiative, use this data to open the conversation first. Differences in orientation are not resistance; they are information about what the team needs to discuss before committing.' },
+    { icon:'&#127963;', title:'Hold the team\'s learning, not just outcomes',
+      text:'Shifts in teaching dispositions take time and psychological safety. Your role is to create conditions for honest reflection &mdash; protecting time for dialogue, modelling vulnerability yourself, and making it safe for teachers to question their own defaults.' },
+  ];
+
+  html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+  actions.forEach(function(a){
+    html += '<div style="display:flex;gap:10px;align-items:flex-start;background:white;'
+      +'border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;">'
+      +'<span style="font-size:18px;flex-shrink:0;line-height:1.3;">'+a.icon+'</span>'
+      +'<div><div style="font-size:12px;font-weight:700;color:#1f2937;margin-bottom:2px;">'+a.title+'</div>'
+      +'<p style="font-size:11px;color:#6b7280;line-height:1.55;margin:0;">'+a.text+'</p>'
+      +'</div></div>';
+  });
+  html += '</div>';
+  html += '</div>';
+
+  panel.innerHTML = html;
+}
+
+
+function toggleHmSec(idx) {
+  var body = document.getElementById('hm-sec-body-'+idx);
+  var chev = document.getElementById('hm-sec-chev-'+idx);
+  if(!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if(chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+function toggleScenOpts(si) {
+  var panel = document.getElementById('scen-opts-'+si);
+  var chev  = document.getElementById('scen-opts-chev-'+si);
+  var btn   = document.getElementById('scen-opts-btn-'+si);
+  if(!panel) return;
+  var open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if(chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+  if(btn)  btn.style.borderRadius = open ? '10px' : '10px 10px 0 0';
+}
+
+
+function renderHmReflect() {
+  var panel = document.getElementById('hmReflectPanel');
+  if(!panel) return;
+  var allLabels = Array.from(new Set(Object.keys(BASELINE).concat(Object.keys(ENDLINE))));
+  var isFacilitator = currentUser && currentUser.role === 'facilitator';
+
+  function avg(vals){ return vals.length ? vals.reduce(function(a,b){return a+b;},0)/vals.length : null; }
+  function sp(vals){
+    if(vals.length<2) return 0;
+    var m=avg(vals);
+    return Math.sqrt(vals.reduce(function(s,v){return s+(v-m)*(v-m);},0)/vals.length);
+  }
+  function qVals(dataset,qi){ return allLabels.filter(function(l){return !!dataset[l];}).map(function(l){return dataset[l][qi];}); }
+  function dimScores(dataset,d){ return allLabels.filter(function(l){return !!dataset[l];}).map(function(l){return (dataset[l][d.q2]-dataset[l][d.q1])+3;}); }
+
+  // Q-level stats
+  var qs = [];
+  for(var qi=0;qi<10;qi++){
+    var av=qVals(ENDLINE,qi), nv=qVals(BASELINE,qi);
+    qs.push({qi:qi, aAvg:avg(av), aSp:sp(av), nAvg:avg(nv), nSp:sp(nv)});
+  }
+  // Dim-level stats
+  var ds = DIM_DEFS.map(function(d,i){
+    var av=dimScores(ENDLINE,d), nv=dimScores(BASELINE,d);
+    return {d:d,i:i, aAvg:avg(av), aSp:sp(av), nAvg:avg(nv), nSp:sp(nv)};
+  });
+
+  var QL = ['Social distance (Q1)','Student openness (Q2)','Behave first (Q3)','Emotions out (Q4)',
+    'Avoid mistakes (Q5)','Teacher as friend (Q6)','Create openness (Q7)',
+    'Understand struggles (Q8)','Classroom social (Q9)','Safe to err (Q10)'];
+  var QFull = [
+    'keeping social distance from students to maintain discipline',
+    'expecting students to open up before a relationship can form',
+    'requiring discipline and behaviour before learning can happen',
+    'leaving emotional and social issues outside the classroom to focus on academics',
+    'avoiding mistakes in front of students to maintain authority',
+    'being like a friend to students',
+    'creating opportunities for less open students to open up',
+    'understanding emotional struggles to create safe space for learning',
+    'treating the classroom as a social space where emotional issues naturally come up',
+    'developing a safe space to make errors and seek feedback'
+  ];
+
+  // Identify superpower: uniform + progressive in April
+  var superpower = qs.filter(function(q){return q.aAvg!==null && q.aAvg>2.8 && q.aSp<0.8;});
+  // Identify friction: high variance in April
+  var friction = qs.filter(function(q){return q.aAvg!==null && q.aSp>=1.1;});
+  // Drift: dims that moved
+  var grown    = ds.filter(function(s){return s.aAvg!==null&&s.nAvg!==null&&s.aAvg>s.nAvg+0.3;});
+  var hardened = ds.filter(function(s){return s.aAvg!==null&&s.nAvg!==null&&s.aAvg<s.nAvg-0.3;});
+  var cohesive = ds.filter(function(s){return s.aAvg!==null&&s.nAvg!==null&&s.aSp<s.nSp-0.15;});
+  var diverged = ds.filter(function(s){return s.aAvg!==null&&s.nAvg!==null&&s.aSp>s.nSp+0.15;});
+  // Warm demanders
+  var warmD = allLabels.filter(function(l){
+    var d=ENDLINE[l]||BASELINE[l]; return d&&d[2]>2.5&&d[9]>2.5;
+  });
+  // Collective blindspot: all amber on one Q, all teal on another
+  var allAmber = qs.filter(function(q){return q.aAvg!==null&&q.aAvg<2.2&&q.aSp<0.8;});
+  var allTeal  = qs.filter(function(q){return q.aAvg!==null&&q.aAvg>2.8&&q.aSp<0.8;});
+  // Q8 strength
+  var q8 = qs[7];
+
+  // ── Build HTML — prose only, no bullets, minimal sub-labels ────────
+  var s = '';
+  var hmSecIdx = 0;
+  var sec = function(title, body){
+    var idx = hmSecIdx++;
+    var secId = 'hm-sec-body-'+idx;
+    var chevId = 'hm-sec-chev-'+idx;
+    return '<div style="margin-bottom:10px;border:1px solid #e0e7ff;border-radius:12px;overflow:hidden;">'      +'<button onclick="toggleHmSec('+idx+')" style="width:100%;text-align:left;background:#f5f7ff;border:none;'      +'padding:10px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;">'      +'<span style="font-size:12px;font-weight:700;color:#4338ca;">'+title+'</span>'      +'<svg id="'+chevId+'" style="width:16px;height:16px;color:#6366f1;flex-shrink:0;transition:transform 0.2s;" '      +'fill="none" stroke="currentColor" viewBox="0 0 24 24">'      +'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>'      +'</button>'      +'<div id="'+secId+'" style="display:none;padding:12px 14px;font-size:12px;color:#374151;line-height:1.7;background:white;">'+body+'</div>'      +'</div>';
+  };
+  var box = function(bg, border, color, text){
+    return '<div style="background:'+bg+';border:1px solid '+border+';border-radius:10px;padding:10px 12px;margin-top:8px;font-size:11px;color:'+color+';line-height:1.6;">'+text+'</div>';
+  };
+
+  // ── SECTION 1: What you hold together ──────────────────────────────
+  var s1body = '';
+  if(superpower.length>0){
+    var spNames = superpower.map(function(q){return '<strong>'+QL[q.qi]+'</strong>';}).join(' and ');
+    s1body += 'Your team is most aligned on '+spNames+'. ';
+    s1body += 'A student walking into any classroom on '+(superpower.length===1?'this question':'these questions')+' will encounter a broadly similar approach — ';
+    s1body += 'and that consistency is something students can rely on, even if they cannot name it.';
+    if(q8.aAvg!==null && q8.aAvg>3.0 && q8.aSp<1.0){
+      s1body += ' Your team also shares a strong disposition toward understanding student struggles — collectively, this is a foundation that gives students a better chance of feeling seen, regardless of whose classroom they are in.';
+    }
+  } else {
+    s1body += 'Your team does not have a single question where everyone is strongly aligned in the progressive direction — which itself is worth noticing. ';
+    s1body += 'It means students cannot yet predict what to expect across classrooms on most of these dimensions.';
+  }
+  s1body += box('#f0fdf4','#a7f3d0','#065f46',
+    'Shared strengths are not just reassuring — they are the starting point for building a common culture. Knowing where you already agree gives the team a platform to have harder conversations about where you do not.');
+  s += sec('What your team holds together', s1body);
+
+  // ── SECTION 2: Where you diverge ───────────────────────────────────
+  var s2body = '';
+  if(friction.length>0){
+    var fNames = friction.map(function(q){return '<strong>'+QL[q.qi]+'</strong>';}).join(' and ');
+    s2body += 'The widest spread in your team is on '+fNames+'. ';
+    s2body += 'These are not small differences in degree — some teachers hold strongly traditional positions on '+(friction.length===1?'this question':'these questions')+' while others hold strongly progressive ones. ';
+    s2body += 'Students moving between your classrooms encounter genuinely different relational environments, and they adjust accordingly — deciding quickly who is safe to be open with and who is not. ';
+    s2body += 'That adjustment takes cognitive energy that belongs to learning, not to navigation.';
+    if(friction.length>0){
+      var fq = friction[0];
+      s2body += box('#fff7ed','#fed7aa','#92400e',
+        'Think about what <strong>'+QFull[fq.qi]+'</strong> looks like differently across your team. '
+        +'Imagine a student with anxiety moving from a teacher at one end of this spectrum to a teacher at the other. '
+        +'What is that student carrying into the next classroom — and how much of their attention goes to managing that, rather than to learning?');
+    }
+  } else {
+    s2body += 'Your team is relatively well-aligned across most questions in April — the spread between teachers is not dramatic. ';
+    s2body += 'That is a form of coherence worth acknowledging, even if the team still has room to move in a more progressive direction together.';
+  }
+  s += sec('Where you diverge — and what it costs students', s2body);
+
+  // ── SECTION 3: What shifted ─────────────────────────────────────────
+  var s3body = '';
+  if(grown.length>0||hardened.length>0||cohesive.length>0||diverged.length>0){
+    if(grown.length>0){
+      s3body += 'Between November and April your team moved toward stronger progressive dispositions on <strong>'+grown.map(function(s){return s.d.name;}).join('</strong> and <strong>')+'</strong>. ';
+      s3body += 'This suggests the year\'s experiences — formal or informal — have been shifting something in how the team thinks and works. ';
+    }
+    if(hardened.length>0){
+      s3body += (grown.length?'At the same time, on ':'On ')+'<strong>'+hardened.map(function(s){return s.d.name;}).join('</strong> and <strong>')+'</strong>, the team moved toward more traditional dispositions. ';
+      s3body += 'This is worth sitting with — it may reflect a stress response, a loss of time, or a sense that progressive approaches were not being reciprocated. ';
+    }
+    if(cohesive.length>0){
+      s3body += 'Notably, on <strong>'+cohesive.map(function(s){return s.d.name;}).join('</strong> and <strong>')+'</strong>, the team became more aligned — the spread between teachers narrowed. ';
+      s3body += 'Even where the direction of movement was not uniformly progressive, moving together creates a more coherent experience for students. ';
+    }
+    if(diverged.length>0){
+      s3body += 'On <strong>'+diverged.map(function(s){return s.d.name;}).join('</strong> and <strong>')+'</strong>, the team actually spread further apart this year. ';
+      s3body += 'Whatever changed for teachers individually on this dimension, it did not become a shared conversation — and the divergence shows. ';
+    }
+    s3body += box('#eef2ff','#c7d2fe','#4338ca',
+      'Teams that drift together — even in the traditional direction — give students more consistency than teams that drift in different directions individually. '
+      +'The question is not just where you moved, but whether you moved with awareness of each other.');
+  } else {
+    s3body += 'Your team\'s collective positions were largely stable between November and April — little drift in either direction. ';
+    s3body += 'Stability is not necessarily stagnation, but it is worth asking: is this a team that has settled into its positions, or one that has not yet found the conversations that would move it?';
+  }
+  s += sec('What shifted from November to April', s3body);
+
+  // ── SECTION 4: What dialogue makes possible ─────────────────────────
+  var s4body = '';
+  s4body += 'Looking at this data together is not about reaching consensus — it is about making the invisible visible. ';
+  s4body += 'When teachers do not know where their colleagues sit on these questions, they each do their own thing in good faith. ';
+  s4body += 'When they do know, something shifts: positions become choices rather than defaults, and small agreements become possible. ';
+
+  if(warmD.length>0){
+    s4body += (isFacilitator ? warmD.length+' teacher'+(warmD.length>1?'s hold':'holds') : 'Some teachers hold')
+      +' both high structure and high warmth simultaneously — believing discipline matters AND that space for errors is essential. ';
+    s4body += 'That is a complex position to hold, and it is worth the team understanding what it looks like in practice — not to replicate it, but to learn from it. ';
+  }
+
+  if(allAmber.length>0 && allTeal.length>0){
+    s4body += 'Your team collectively disagrees that <strong>'+QFull[allAmber[0].qi]+'</strong>, yet collectively agrees on <strong>'+QFull[allTeal[0].qi]+'</strong>. ';
+    s4body += 'How does that play out in a real classroom moment? That contradiction is exactly the kind of thing a team conversation can surface and work with.';
+  }
+
+  s4body += box('#faf5ff','#e9d5ff','#6d28d9',
+    'A common language does not mean everyone teaches the same way. It might be as simple as agreeing that every student gets acknowledged at the door, or that when a student is visibly distressed every teacher pauses — even briefly — before continuing. '
+    +'Small agreements at the edges of difference tell a student: whatever else varies, this is constant. That constancy is what a team culture feels like from the inside.');
+  s += sec('What dialogue makes possible', s4body);
+
+  // ── SECTION 5: A question to sit with ──────────────────────────────
+  var s5body = '';
+  var focusDim = friction.length>0 ? friction[0] : (diverged.length>0 ? {qi:diverged[0].i} : null);
+  if(focusDim && !isFacilitator){
+    s5body += 'You have now seen where you sit in this team\'s spread — not as a judgement, but as a fact. ';
+    s5body += 'Think about the dimension where your team is most divided. ';
+    s5body += 'What is one thing you do in your classroom that you suspect your colleagues do very differently? ';
+    s5body += 'And what would it take to bring that into a conversation with them — not to change it, but to make it visible enough to work with together?';
+  } else if(isFacilitator){
+    s5body += 'As you look at this team\'s data, what is the one conversation that has not happened yet — the one that, if it did, would shift something in how this team works together for students?';
+  } else {
+    s5body += 'You have now seen the collective picture. What is the one thing about your own position in this team\'s spread that you would most want a colleague to understand?';
+  }
+  s5body += box('#f0f9ff','#bae6fd','#0369a1',
+    'Team culture is not built in training sessions — it is built in small, honest conversations that accumulate over time into a shared way of being. This data is an invitation to start one.');
+  s += sec('A question to sit with', s5body);
+
+  panel.innerHTML = s;
+}
+
+
+// ── Goal slider ───────────────────────────────────────────────────────
+function renderGoalSlider(){
+  const dimName=document.getElementById('goalDim').value;
+  const area=document.getElementById('goalSliderArea');
+  const viz=document.getElementById('goalSliderViz');
+  const poles=document.getElementById('goalPoleLabels');
+  if(!dimName){area.classList.add('hidden');return;}
+
+  const dim=DIM_DEFS.find(d=>d.name===dimName);
+  if(!dim){return;}
+
+  // Get current position from endline, fallback baseline
+  const isFacilitatorGoal = currentUser.role==='facilitator';
+  const myLabel = isFacilitatorGoal
+    ? (document.getElementById('facilitatorTeacherSelect') ? document.getElementById('facilitatorTeacherSelect').value : 'A')
+    : currentUser.label;
+  const data=ENDLINE[myLabel]||BASELINE[myLabel];
+  let currentPct=50;
+  if(data){
+    const score=(data[dim.q2]-data[dim.q1])+3; // 0-6
+    currentPct=Math.round((score/6)*100);
+  }
+
+  area.classList.remove('hidden');
+  poles.innerHTML=`<span style="color:#b45a1e;font-weight:600;">${dim.pole1}</span><span style="color:#0f7370;font-weight:600;">${dim.pole2}</span>`;
+
+  viz.innerHTML=`
+    <div style="position:relative;margin:8px 0;">
+      <div style="height:24px;border-radius:12px;background:linear-gradient(to right,#b45a1e,#e6a55a,#f5f0e1,#64beb4,#0f7370);position:relative;">
+        <div id="currentMarker" style="position:absolute;top:50%;left:${currentPct}%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:white;border:3px solid #374151;box-shadow:0 1px 4px rgba(0,0,0,0.3);" title="Where you are now"></div>
+        <div id="goalMarker" style="position:absolute;top:50%;left:60%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:white;border:3px solid #f59e0b;box-shadow:0 1px 4px rgba(0,0,0,0.3);cursor:grab;" title="Drag to your goal"></div>
+      </div>
+      <input type="range" min="0" max="100" value="60" id="goalRange" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;" oninput="moveGoalMarker(this.value)">
+    </div>
+    <div style="display:flex;gap:16px;font-size:10px;margin-top:4px;">
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;border:2px solid #374151;display:inline-block;"></span>Where you are now</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;border:2px solid #f59e0b;display:inline-block;"></span>Your goal (drag to set)</span>
+    </div>`;
+}
+
+function moveGoalMarker(val){
+  const m=document.getElementById('goalMarker');
+  if(m) m.style.left=val+'%';
+  goalDesiredPct=parseInt(val);
+}
+
+// ── Reflections ───────────────────────────────────────────────────────
+async function submitReflections(){
+  const r1=document.getElementById('r1').value.trim();
+  const r2=document.getElementById('r2').value.trim();
+  const r2why=document.getElementById('r2why').value.trim();
+  const r3=document.getElementById('r3').value.trim();
+  const dimName=document.getElementById('goalDim').value;
+  const errEl=document.getElementById('submitError');
+  const btn=document.getElementById('submitReflBtn');
+
+  if(!r1&&!r2&&!r3){showErr(errEl,'Please fill in at least one reflection before submitting.');return;}
+
+  btn.textContent='Submitting...';btn.disabled=true;
+  try {
+    const goalRange=document.getElementById('goalRange');
+    await supa('POST','workshop_goals',null,{
+      participant_label: currentUser.label,
+      dimension: dimName||'',
+      reflection_q1: r1||null,
+      reflection_q2: r2||null,
+      reflection_q3: r3||null,
+      goal_dimension: dimName||null,
+      goal_current: document.getElementById('goalSliderArea').classList.contains('hidden')?null:'Current position set',
+      goal_desired: goalRange?goalRange.value+'%':null,
+      goal_why: r2why||null,
+      posted_to_wall: true
+    });
+    const suc=document.getElementById('submitSuccess');
+    suc.textContent='✓ Your reflections have been shared on the community wall!';
+    suc.classList.remove('hidden');
+    btn.textContent='Submitted ✓';
+    btn.classList.replace('bg-indigo-600','bg-green-600');
+    setTimeout(()=>goTo('wall'),1200);
+  } catch(e){
+    showErr(errEl,'Something went wrong. Please try again.');
+    btn.textContent='Submit Anonymously to Wall';btn.disabled=false;
+  }
+}
+
+// ── Wall ──────────────────────────────────────────────────────────────
+async function loadWall(){
+  const count=document.getElementById('wallCount');
+  count.textContent='Loading...';
+  try {
+    const rows=await supa('GET','workshop_goals','select=*&order=created_at.desc&posted_to_wall=eq.true');
+    renderWall(rows||[]);
+  } catch(e){
+    document.getElementById('wallCards').innerHTML='<div class="col-span-2 text-center py-8 text-red-400 text-sm">Could not load responses. Please refresh.</div>';
+  }
+}
+
+function filterWall(f){
+  wallFilter=f;
+  document.querySelectorAll('.wall-filter').forEach(b=>{
+    const on=b.id==='wf-'+f;
+    b.className='wall-filter px-3 py-1.5 rounded-full text-xs font-semibold border-2 '+(on?'border-indigo-400 bg-indigo-600 text-white':'border-indigo-200 bg-white text-indigo-700');
+  });
+  loadWall();
+}
+
+function timeAgo(ts){
+  const d=Math.floor((Date.now()-new Date(ts))/1000);
+  if(d<60) return 'just now';
+  if(d<3600) return Math.floor(d/60)+' min ago';
+  if(d<86400) return Math.floor(d/3600)+' hr ago';
+  return Math.floor(d/86400)+' day ago';
+}
+
+function renderWall(rows){
+  const isFacilitator=currentUser.role==='facilitator';
+  const container=document.getElementById('wallCards');
+  const count=document.getElementById('wallCount');
+  let cards='',total=0;
+
+  const qDefs=[
+    {key:'reflection_q1',filter:'r1',label:'Change noticed'},
+    {key:'reflection_q2',filter:'r2',label:'Growth goal'},
+    {key:'reflection_q3',filter:'r3',label:'Team role'},
+  ];
+
+  rows.forEach(r=>{
+    qDefs.forEach(q=>{
+      const text=r[q.key];
+      if(!text||!text.trim()) return;
+      total++;
+      if(wallFilter!=='all'&&wallFilter!==q.filter) return;
+      const safe=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const who=isFacilitator?('T-'+r.participant_label):'A Teacher';
+      const goalBadge=(q.key==='reflection_q2'&&r.goal_dimension)?`<div style="margin-top:6px;display:inline-block;background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:12px;">Goal: ${r.goal_dimension}</div>`:'';
+      cards+=`<div style="background:white;border-radius:16px;padding:1.1rem;border:1px solid #e0e7ff;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#eef2ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${isFacilitator?r.participant_label[0]:'T'}</div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#374151;">${who}</div>
+            <div style="font-size:10px;color:#9ca3af;">${timeAgo(r.created_at)}</div>
+          </div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">${q.label}</div>
+        <div style="font-size:12px;color:#4b5563;line-height:1.55;">${safe}</div>
+        ${goalBadge}
+      </div>`;
+    });
+  });
+
+  count.textContent=total+(total===1?' response':' responses');
+  container.innerHTML=cards||`<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#a5b4fc;">
+    <div style="font-size:32px;margin-bottom:8px;">+</div>
+    <div style="font-size:13px;font-weight:600;">${rows.length===0?'No responses yet — be the first!':'No responses for this filter yet.'}</div>
+  </div>`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+try {
+  const saved=localStorage.getItem('wbUser');
+  if(saved){
+    try{currentUser=JSON.parse(saved);startApp();}
+    catch(e){localStorage.removeItem('wbUser');}
+  }
+} catch(e) {
+  // localStorage not available (e.g. private browsing with restrictions)
+  console.warn('localStorage not available:', e);
+}
+</script>
+</body>
+</html>
